@@ -4,7 +4,7 @@ const chalk = require('chalk')
 const wske = require('@openwhisk-libs/wsk')
 const utils = require('./libs/utils')
 
-const extensions = ['--help', '-V', '--version', '-h', 'project', 'update']
+const extensions = ['--help', '-V', '--version', '-h', 'project', 'update', 'env']
 
 const run = async () => {
     //if (await wske.update()) {
@@ -33,7 +33,7 @@ const run = async () => {
 
     utils.addOptions(cmds, utils.options.GLOBAL)
 
-    cmds.description('Enhanced Apache OpenWhisk CLI')
+    cmds.description('Apache OpenWhisk CLI with extensions')
         .command('bluemix', 'bluemix integration')
         .command('action', 'work with actions')
         .command('activation', 'work with activations')
