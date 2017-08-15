@@ -7,14 +7,12 @@
 This project hasn't been published yet. To get started do:
 
 ```bash
-$ git clone git@github.ibm.com:villard/whisk-libs.git
-$ cd whisk-libs/wsk-cli
-$ npm i
-$ npm run linkwsk
+$ git clone git@github.ibm.com:villard/wskp.git
+$ cd wksp
+$ bin/install.sh
 $ wskp --help
 
 Usage: wskp <command> [options]
-
 ...
 ```
 

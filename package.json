@@ -1,7 +1,7 @@
 {
-  "name": "@openwhisk-libs/wsk-cli",
+  "name": "@openwhisk-libs/wskp",
   "version": "0.1.0",
-  "description": "OpenWhisk command line with extensins",
+  "description": "OpenWhisk command line with extensions",
   "bin": {
     "wskp": "wskp.js"
   },
