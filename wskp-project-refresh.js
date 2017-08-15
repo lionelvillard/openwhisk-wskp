@@ -4,6 +4,8 @@ const wske = require('@openwhisk-libs/wsk')
 const openwhisk = require('openwhisk')
 const utils = require('./libs/utils.js')
 
+console.log(`${chalk.yellow('Warning:')} experimental feature`)
+
 program
     .option('-f <format>, --format <format>]', 'output format (bash|json) [json], /^(bash|json)$/i')
     .parse(process.argv)

@@ -5,6 +5,8 @@ const chalk = require('chalk')
 const fs = require('fs-extra')
 const utils = require('./libs/utils')
 
+console.log(`${chalk.yellow('Warning:')} experimental feature`)
+
 if (process.argv.length === 2) {
     console.error(`${chalk.red('error:')} missing configuration file`)
     process.exit(1)

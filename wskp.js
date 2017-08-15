@@ -4,7 +4,7 @@ const chalk = require('chalk')
 const wske = require('@openwhisk-libs/wsk')
 const utils = require('./libs/utils')
 
-const extensions = ['--help','-V', '--version', '-h', 'refresh','update','env','sync','deploy']
+const extensions = ['--help', '-V', '--version', '-h', 'project', 'update']
 
 const run = async () => {
     //if (await wske.update()) {
@@ -27,15 +27,29 @@ const run = async () => {
         console.log('')
     })
 
-    program
-        .version('0.1.0')
+    const cmds = program
+        .version('0.2.0')
         .usage('<command> [options]')
-        .description('Enhanced Apache OpenWhisk CLI')
-        .command('refresh', 'synchronize whisk configuration files with deployed entities')
-        .command('update', 'check for updates')
+
+    utils.addOptions(cmds, utils.options.GLOBAL)
+
+    cmds.description('Enhanced Apache OpenWhisk CLI')
+        .command('bluemix', 'bluemix integration')
+        .command('action', 'work with actions')
+        .command('activation', 'work with activations')
+        .command('package', 'work with packages')
+        .command('rule', 'work with rules')
+        .command('trigger', 'work with triggers')
+        .command('sdk', 'work with the sdk')
+        .command('property', 'work with whisk properties')
+        .command('namespace', 'work with namespaces')
+        .command('list', 'list entities in the current namespace')
+        .command('api-experimental', 'work with APIs (experimental)')
+        .command('api', 'work with APIs')
         .command('env', 'work with environments')
-        .command('sync', 'synchronize whisk configuration files with local resources') // TODO: or remote
-        .command('deploy', 'apply whisk configuration files')
+        .command('project (experimental)', 'work with project')
+        .command('update', 'check for updates')
+        
         //.command('cache', 'manage the local cache') Might be useful for analysis.  
         .parse(process.argv)
 }

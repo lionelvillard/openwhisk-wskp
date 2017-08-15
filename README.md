@@ -26,39 +26,13 @@ Usage: wskp <command> [options]
 
 ## Commands
 
-- [wskp update](#wskp-update)
-- [wskp refresh](#wip-wskp-refresh)
-- [wskp sync](#wip-wskp-sync)
-- [wskp deploy](#wip-wskp-deploy)
-- [wskp env](#wip-wskp-env)
+- [wskp update](#wskp-update): check for update 
+- [wskp project](#wip-wskp-project): work with project
+- [wskp env](#wip-wskp-env): work with deployment environment
 
 ### `wskp update`
 
 Check for the `wskp` and `wsk` updates.
-
-### WIP: `wskp refresh`
-
-Export all OpenWhisk entities deployed in the current namespace to a file. Currently `wskp refresh` generates a `bash` script.
-
-### WIP: `wskp sync`
-
-Update the deployment configuration based on the current directory structure.
-
-This commands scans the following directories:
-
-    |- actions
-       |- <action-name>
-          <action>.js or <package.json>
-       action-name.js
-    |- packages
-      |- <package-name>
-         |- <action-name>
-            <action>.js or <package.json>
-         action-name.js
-
-### WIP: `wskp deploy`
-
-Deploy OpenWhisk entities to an environment 
 
 ### WIP: `wskp env`
 
@@ -85,4 +59,35 @@ List all environments for the current project
 
 Set the current environment to `<envname>`. Resolve missing environment variables when needed.
 
+### WIP: `wskp project`
+
+Work with project. A project is a collection of OpenWhisk entities and environments.
+
+- [wskp project sync](#wskp-project-sync): synchronize project with local resources
+- [wskp project refresh](#wskp-project-refresh): synchronize project with deployed resources
+- [wskp project deploy](#wskp-project-deploy): deploy project
+
+#### `wskp project sync`
+
+Update the deployment configuration based on the current directory structure.
+
+This commands scans the following directories:
+
+    |- actions
+       |- <action-name>
+          <action>.js or <package.json>
+       action-name.js
+    |- packages
+      |- <package-name>
+         |- <action-name>
+            <action>.js or <package.json>
+         action-name.js
+
+#### `wskp project refresh`
+
+Export all OpenWhisk entities deployed in the current environment to a bash script.
+
+#### `wskp project deploy`
+
+Deploy project to OpenWhisk   
 
