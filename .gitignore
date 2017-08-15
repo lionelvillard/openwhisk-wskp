@@ -3,3 +3,5 @@ bin/darwin/wsk
 bin/linux/wsk
 bin/win32/wsk.exe
 bin/whisk-libs
+test/fixtures/.wskprops
+test/fixtures/.wskprops.bak
