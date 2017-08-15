@@ -4,7 +4,7 @@ const chalk = require('chalk')
 const wske = require('@openwhisk-libs/wsk')
 const utils = require('./libs/utils')
 
-const extensions = ['--help','refresh','update','env','sync','deploy']
+const extensions = ['--help','-V', '--version', '-h', 'refresh','update','env','sync','deploy']
 
 const run = async () => {
     //if (await wske.update()) {
