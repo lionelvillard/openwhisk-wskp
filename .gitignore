@@ -1,0 +1,4 @@
+node_modules
+bin/darwin/wsk
+bin/linux/wsk
+bin/win32/wsk.exe
