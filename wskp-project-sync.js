@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const wske = require('@openwhisk-libs/wsk')
+const wske = require('@openwhisk/wsk')
 const chalk = require('chalk')
 
 console.log(`${chalk.yellow('Warning:')} experimental feature.

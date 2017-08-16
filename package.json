@@ -1,5 +1,5 @@
 {
-  "name": "@openwhisk-libs/wskp",
+  "name": "@openwhisk/wskp",
   "version": "0.1.1",
   "description": "OpenWhisk command line with extensions",
   "bin": {
@@ -8,13 +8,14 @@
   "main": "wskp.js",
   "scripts": {
     "test": "mocha",
-    "link": "cd ../openwhisk-libs && npm link && cd - && npm link && npm link @openwhisk-libs/wsk"
+    "link": "cd ../openwhisk-libs && npm link && cd - && npm link && npm link @openwhisk/wsk"
   },
   "keywords": [],
   "author": "Lionel Villard",
   "license": "Apache-2.0",
   "dependencies": {
     "@openwhisk-libs/deploy": "^0.2.0",
+    "@openwhisk/wsk": "^0.1.0",
     "chalk": "^1.1.3",
     "child-process-promise": "^2.2.1",
     "commander-multi": "^2.11.0-multi.0",

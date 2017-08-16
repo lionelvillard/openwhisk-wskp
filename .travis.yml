@@ -1,4 +1,4 @@
 language: node_js
 node_js: node
-install: bin/install.sh
+install: npm install
 script: npm test

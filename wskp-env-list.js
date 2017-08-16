@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const program = require('commander-multi')
-const wske = require('@openwhisk-libs/wsk')
+const wske = require('@openwhisk/wsk')
 
 program
     .parse(process.argv)
