@@ -28,7 +28,7 @@ const run = async () => {
     })
 
     const cmds = program
-        .version('0.2.0')
+        .version('0.1.1')
         .usage('<command> [options]')
 
     utils.addOptions(cmds, utils.options.GLOBAL)
