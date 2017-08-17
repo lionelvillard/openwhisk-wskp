@@ -7,9 +7,10 @@ it('test wskp with no args', async () => {
     expect(output.stdout).to.contain('Apache OpenWhisk CLI with extensions')
 })
 
-describe('test environment', () => {
+describe('test environment', function() {
     const wskp = '../../wskp.js'
     const cwd = 'test/fixtures'
+    this.timeout(5000)
 
     it('with no args', async () => {
         const output = await exec(`${wskp} env`, {cwd})
