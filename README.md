@@ -29,6 +29,7 @@ Usage: wskp <command> [options]
 - [wskp update](#wskp-update): check for update 
 - [wskp project](#wip-wskp-project): work with project
 - [wskp env](#wip-wskp-env): work with deployment environment
+- [wskp yo](#wskp-yo): stub generator
 
 ### `wskp update`
 
@@ -90,4 +91,19 @@ Export all OpenWhisk entities deployed in the current environment to a bash scri
 #### `wskp project deploy`
 
 Deploy project to OpenWhisk   
+
+
+### `wskp yo`
+
+Builtin stub generator based on [yeoman](http://yeoman.io/).
+
+- [wskp yo action](#wskp-yo-action): generate an action
+
+#### `wskp yo action`
+
+Generate an action.
+
+The package and action names are inferred by analyzing the current directory structure (see [sync](#wskp-project-sync)).
+
+
 

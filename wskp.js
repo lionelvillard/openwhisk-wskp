@@ -4,7 +4,7 @@ const chalk = require('chalk')
 const wske = require('@openwhisk/wsk')
 const utils = require('./libs/utils')
 
-const extensions = ['--help', '-V', '--version', '-h', 'project', 'update', 'env']
+const extensions = ['--help', '-V', '--version', '-h', 'project', 'update', 'env', 'yo']
 
 const run = async () => {
     //if (await wske.update()) {
@@ -48,6 +48,7 @@ const run = async () => {
         .command('api', 'work with APIs')
         .command('env', 'work with environments')
         .command('project (experimental)', 'work with project')
+        .command('yo', 'generate stubs')
         .command('update', 'check for updates')
         
         //.command('cache', 'manage the local cache') Might be useful for analysis.  
