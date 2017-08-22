@@ -3,6 +3,7 @@ const program = require('commander-multi')
 const chalk = require('chalk')
 const wske = require('@openwhisk/wsk')
 const utils = require('./libs/utils')
+const pkg = require('./package.json')
 
 const extensions = ['--help', '-V', '--version', '-h', 'project', 'update', 'env', 'yo']
 
@@ -28,7 +29,7 @@ const run = async () => {
     })
 
     const cmds = program
-        .version('0.1.1')
+        .version(pkg.version)
         .usage('<command> [options]')
 
     utils.addOptions(cmds, utils.options.GLOBAL)
