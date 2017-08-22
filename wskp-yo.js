@@ -8,10 +8,19 @@ const cmds = program
     .usage('<command> [options]')
     .description('generate stubs')
 
+
+// --- Generate project
+
+program.command('project')
+    .description('generate project')
+    .action(() => {
+        wsk.yo.run('app')
+    })
+
 // --- Generate action
 
 program.command('action')
-    .description('generate or update an action stub')
+    .description('generate action')
     .action(() => {
         wsk.yo.run('action')
     })
