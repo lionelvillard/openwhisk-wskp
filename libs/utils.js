@@ -117,17 +117,11 @@ const spawnWskAndExit = (wskcmd, argv, options = {}) => {
     if (process.env.WSKP_DEBUG)
         console.error(`spawn ${fullCmd}`)
 
-    const poll = wskcmd === 'activation' && argv[1] === 'poll'
-    const proc = spawn(fullCmd, { shell: true, stdio: poll ? 'ignore' : 'inherit', detached: poll })
+    const proc = spawn(fullCmd, { shell: true, stdio: 'inherit' })
 
-    if (poll) {
-        proc.unref()
-        process.exit(0)
-    }
-    else
-        proc.on('close', code => {
-            process.exit(code)
-        })
+    proc.on('close', code => {
+        process.exit(code)
+    })
 }
 exports.spawnWskAndExit = spawnWskAndExit
 
