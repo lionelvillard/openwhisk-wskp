@@ -9,8 +9,8 @@ This project hasn't been published yet. To get started do:
 ```bash
 $ git clone git@github.ibm.com:villard/wskp.git
 $ cd wksp
-$ bin/install.sh
-$ wskp --help
+$ npm install
+$ wskp
 
 Usage: wskp <command> [options]
 ...
@@ -64,9 +64,30 @@ Set the current environment to `<envname>`. Resolve missing environment variable
 
 Work with project. A project is a collection of OpenWhisk entities and environments.
 
+- [wskp project deploy](#wskp-project-deploy): deploy project
+- [wskp project undeploy](#wskp-project-undeploy): undeploy project
 - [wskp project sync](#wskp-project-sync): synchronize project with local resources
 - [wskp project refresh](#wskp-project-refresh): synchronize project with deployed resources
-- [wskp project deploy](#wskp-project-deploy): deploy project
+
+#### `wskp project deploy`
+
+Deploy project to OpenWhisk.
+
+```bash
+Usage: wskp project deploy [options] <openwhisk.yml>
+  
+Command Options:
+
+-m, --mode [mode]      deployment mode (create|update) [create]
+```  
+
+#### `wskp project undeploy`
+
+Undeploy project.
+
+```bash
+Usage: wskp project undeploy [options] <openwhisk.yml>
+```  
 
 #### `wskp project sync`
 
@@ -87,11 +108,6 @@ This commands scans the following directories:
 #### `wskp project refresh`
 
 Export all OpenWhisk entities deployed in the current environment to a bash script.
-
-#### `wskp project deploy`
-
-Deploy project to OpenWhisk   
-
 
 ### `wskp yo`
 
