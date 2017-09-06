@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const program = require('commander-multi')
-const deployer = require('@openwhisk/deploy')
+const wskd = require('@openwhisk/deploy')
 const chalk = require('chalk')
 const fs = require('fs-extra')
 const utils = require('./libs/utils')
@@ -13,7 +13,6 @@ if (process.argv.length === 2) {
 }
 
 const apply = async (file, options) => {
-
     if (! await fs.exists(file)) {
         console.log(error(`Error: ${file} does not exists`))
         process.exit(1)
@@ -21,25 +20,22 @@ const apply = async (file, options) => {
 
     let logging = options.logging || 'off'
     logging = logging.toUpperCase()
-    const mode = options.mode || 'create'
 
     const ow = utils.initOW(options)
 
-    return deployer.deploy({
-        ow,
+    return wskd.undeploy({
+        ow, 
         basePath: '.',
         cache: '.openwhisk',
         location: file,
-        logger_level: logging,
-        force: mode === 'update'
+        logger_level: logging
     })
 }
 
-const deploy = program.arguments('<openwhisk.yml>')
-utils.addOptions(deploy, utils.options.GLOBAL)
+const undeploy = program.arguments('<openwhisk.yml>')
+utils.addOptions(undeploy, utils.options.GLOBAL)
 
-deploy.option('-m, --mode [mode]', 'deployment mode (create|update) [create]', /^(create|update)$/i)
-    .option('-v, --logging [level]', 'logging level (debug|off) [off]', /^(debug|off)$/i)
+undeploy.option('-v, --logging [level]', 'logging level (debug|off) [off]', /^(debug|off)$/i)
     .action((file, options) => {
         apply(file, options)
     })
