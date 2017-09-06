@@ -2,7 +2,7 @@
 const program = require('commander-multi')
 const utils = require('./libs/utils')
 const chalk = require('chalk')
-const wsk = require('@openwhisk/wsk')
+const wsk = require('@openwhisk/deploy')
 
 const cmds = program
     .usage('<command> [options]')

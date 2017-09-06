@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const program = require('commander-multi')
 const chalk = require('chalk')
-const wske = require('@openwhisk/wsk')
+const wske = require('@openwhisk/deploy')
 const utils = require('./libs/utils')
 const pkg = require('./package.json')
 

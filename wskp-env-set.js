@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const program = require('commander-multi')
-const wske = require('@openwhisk/wsk')
+const wske = require('@openwhisk/deploy')
 
 program
     .arguments('<envname>')
