@@ -18,82 +18,21 @@ const path = require('path')
 const expandHomeDir = require('expand-home-dir')
 const { spawn, exec } = require('child_process')
 const openwhisk = require('openwhisk')
+const wskd = require('@openwhisk/deploy')
 
-const getWskPropsFile = () => {
-    let wskprops = process.env.WSK_CONFIG_FILE
-    if (!wskprops || !fs.existsSync(wskprops)) {
-        const until = path.dirname(expandHomeDir('~'))
-        let current = process.cwd()
-        while (current !== '/' && current !== until) {
-            wskprops = path.join(current, '.wskprops')
-
-            if (fs.existsSync(wskprops))
-                break
-            current = path.dirname(current)
-        }
-    }
-    return wskprops
-}
-exports.getWskPropsFile = getWskPropsFile
-
-const readWskProps = () => {
-    const wskprops = getWskPropsFile()
-    if (wskprops) {
-        const propertiesParser = require('properties-parser')
-        try {
-            return propertiesParser.read(wskprops)
-        } catch (e) {
-            return null
-        }
-    }
-    return null
-}
-exports.readWskProps = readWskProps
-
-// Resolve auth and api host, independently (TODO)
-const auth = (options = {}) => {
-    if (options.auth)
-        return options
-
-    const wskprops = readWskProps()
-
-    if (wskprops) {
-        return {
-            api_key: wskprops.AUTH,
-            apihost: wskprops.APIHOST,
-            insecure: wskprops.INSECURE_SSL || false
-        }
-    }
-
-    return null
-}
-exports.auth = auth
-
-// Resolve variables by merging command line options with .wskprops content
-const resolveVariables = (options = {}) => {
-    const wskprops = readWskProps() || {}
-    const variables = {}
-
-    variables.auth = options.auth || wskprops.AUTH
-    variables.apihost = options.apihost || wskprops.APIHOST
-    variables.insecure = options.insecure || wskprops.INSECURE_SSL || false
-
-    return variables
-}
-exports.resolveVariables = resolveVariables
 
 // Apply configuration to wsk args
 const fixupWskArgs = (argv, variables) => {
-    if (!argv.includes('-u') && !argv.includes('--auth'))
+    if (!argv.includes('-u') && !argv.includes('--auth') && variables.auth)
         argv.push('-u', variables.auth)
-    if (!argv.includes('--apihost'))
+    if (!argv.includes('--apihost') && variables.apihost)
         argv.push('--apihost', variables.apihost)
-    if (!argv.includes('-i') && variables.insecure)
+    if (!argv.includes('-i') && variables.IGNORE_CERTS)
         argv.push('-i')
 }
 
 const prepareWskCommand = (wskcmd, argv, options = {}) => {
-    const variables = resolveVariables(options)
+    const variables = wskd.auth.resolveVariables(options)
 
     if (wskcmd !== 'property') {
         fixupWskArgs(argv, variables)
@@ -101,11 +40,10 @@ const prepareWskCommand = (wskcmd, argv, options = {}) => {
 
     let wskConfigFile = ''
     if (wskcmd === 'property') {
-        const wskPropsFile = utils.getWskPropsFile()
+        const wskPropsFile = wskd.auth.getWskPropsFile()
         if (wskPropsFile)
             wskConfigFile = `WSK_CONFIG_FILE=${wskPropsFile}`
     }
-
     const args = argv.map(item => `'${item.replace(/'/, `\\'`)}'`).join(' ')
 
     return `${wskConfigFile} wsk ${wskcmd} ${args}`
@@ -143,12 +81,6 @@ const execWsk = (wskcmd, argv, options = {}) => new Promise((resolve, reject) =>
 })
 exports.execWsk = execWsk
 
-const initOW = (options = {}) => {
-    const vars = resolveVariables(options);
-    return openwhisk({ api_key: vars.auth, apihost: vars.apihost })
-}
-exports.initOW = initOW
-
 // ---- options
 
 exports.options = {
@@ -169,4 +101,3 @@ const addOptions = (command, options) => {
     }
 }
 exports.addOptions = addOptions
-

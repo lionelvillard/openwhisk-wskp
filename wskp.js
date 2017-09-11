@@ -5,7 +5,7 @@ const wske = require('@openwhisk/deploy')
 const utils = require('./libs/utils')
 const pkg = require('./package.json')
 
-const extensions = ['--help', '-V', '--version', '-h', 'project', 'update', 'env', 'yo']
+const extensions = ['--help', '-V', '--version', '-h', 'deploy', 'wipe', 'undeploy', 'refresh', 'update', 'env', 'yo']
 
 const run = async () => {
     //if (await wske.update()) {
@@ -48,7 +48,10 @@ const run = async () => {
         .command('api-experimental', 'work with APIs (experimental)')
         .command('api', 'work with APIs')
         .command('env', 'work with environments')
-        .command('project (experimental)', 'work with project')
+        .command('deploy (experimental)', 'deploy managed entities to OpenWhisk')
+        .command('undeploy (experimental)', 'undeploy all managed entities')
+        .command('wipe', 'remove all OpenWhisk managed and unmanaged entities from the project namespace(s)')
+        .command('refresh', 'update the deployment configuration files with the deployed entities')
         .command('yo', 'generate stubs')
         .command('update', 'check for updates')
         

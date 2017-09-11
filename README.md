@@ -125,3 +125,16 @@ The package and action names are inferred by analyzing the current directory str
 
 
 
+# Development
+
+```bash
+$ git clone git@github.ibm.com:villard/wskp.git
+$ cd wskp
+$ npm i
+```
+
+To run the tests, it is recommended to create the file `.wskprops` in the project root directory. Then do:
+
+```bash
+$ npm test
+```

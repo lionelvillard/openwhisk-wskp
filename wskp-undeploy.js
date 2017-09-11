@@ -5,7 +5,7 @@ const chalk = require('chalk')
 const fs = require('fs-extra')
 const utils = require('./libs/utils')
 
-console.log(`${chalk.yellow('Warning:')} experimental feature`)
+//console.log(`${chalk.yellow('Warning:')} experimental feature`)
 
 if (process.argv.length === 2) {
     console.error(`${chalk.red('error:')} missing configuration file`)
@@ -21,15 +21,19 @@ const apply = async (file, options) => {
     let logging = options.logging || 'off'
     logging = logging.toUpperCase()
 
-    const ow = utils.initOW(options)
-
-    return wskd.undeploy({
-        ow, 
-        basePath: '.',
-        cache: '.openwhisk',
-        location: file,
-        logger_level: logging
-    })
+    const ow = wskd.auth.initWsk(options)
+    try {
+        await wskd.undeploy.apply({
+            ow,
+            basePath: '.',
+            cache: '.openwhisk',
+            location: file,
+            logger_level: logging
+        });
+        console.log(chalk.green('ok.'));
+    } catch (e) {
+        console.log(chalk.red(`not ok: ${e}`));
+    }
 }
 
 const undeploy = program.arguments('<openwhisk.yml>')

@@ -5,3 +5,4 @@ bin/win32/wsk.exe
 bin/whisk-libs
 test/fixtures/.wskprops
 test/fixtures/.wskprops.bak
+.wskprops

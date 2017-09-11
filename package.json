@@ -8,7 +8,7 @@
   "main": "wskp.js",
   "scripts": {
     "test": "mocha",
-    "link": "cd ../openwhisk-deploy && npm link && cd - && npm link && npm link @openwhisk/deploy"
+    "link": "npm link @openwhisk/deploy"
   },
   "keywords": [],
   "author": "Lionel Villard",
@@ -22,8 +22,10 @@
     "fs-extra": "^4.0.1",
     "openwhisk": "^3.6.0",
     "properties-parser": "^0.3.1",
+    "readline-sync": "^1.4.7",
     "request": "^2.81.0",
-    "request-promise": "^4.2.1"
+    "request-promise": "^4.2.1",
+    "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "chai": "^4.1.1",
