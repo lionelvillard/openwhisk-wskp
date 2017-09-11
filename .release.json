@@ -1,5 +1,6 @@
 {
     "github": {
+        "release": true,
         "preRelease": true,
         "tokenRef": "IBM_GITHUB_TOKEN"
     }
