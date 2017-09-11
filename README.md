@@ -6,8 +6,10 @@
 
 ## Installing
 
+ 
 
 ```bash
+$ npm login --registry=https://npm-registry.whitewater.ibm.com --scope=@openwhisk
 $ npm install @openwhisk/wskp -g
 $ wskp
 
@@ -141,3 +143,4 @@ To run the tests, it is recommended to create the file `.wskprops` in the projec
 ```bash
 $ npm test
 ```
+
