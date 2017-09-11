@@ -6,12 +6,9 @@
 
 ## Installing
 
-This project hasn't been published yet. To get started do:
 
 ```bash
-$ git clone git@github.ibm.com:villard/wskp.git
-$ cd wksp
-$ npm install
+$ npm install @openwhisk/wskp -g
 $ wskp
 
 Usage: wskp <command> [options]
