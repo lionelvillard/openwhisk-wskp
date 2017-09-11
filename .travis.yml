@@ -1,7 +1,20 @@
 language: node_js
 node_js: node
-install: npm install
-script: npm test
+
+before_install:
+  - git clone https://github.com/lionelvillard/openwhisk-deploy.git --depth 3
+  - cd openwhisk-deploy
+  - npm i 
+  - npm link
+
+
+install: 
+  - npm install
+  - npm link @openwhisk/deploy
+
+script: 
+   - npm test
+
 notifications:
   email:
     - villard@us.ibm.com
