@@ -1,3 +1,5 @@
+[![Build Status](https://travis.ibm.com/villard/wskp.svg?branch=master)](https://travis.ibm.com/villard/wskp)
+
 # `wskp` (aka `wsk+`)
 
 `wskp` is a CLI wrapper around Apache OpenWhisk `wsk` with additional commands. Under the cover, `wskp` calls `wsk` to provide 100% `wsk` compatibility.
