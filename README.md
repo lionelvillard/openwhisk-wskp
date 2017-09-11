@@ -29,15 +29,18 @@ Usage: wskp <command> [options]
 ## Commands
 
 - [wskp update](#wskp-update): check for update 
-- [wskp project](#wip-wskp-project): work with project
-- [wskp env](#wip-wskp-env): work with deployment environment
+- [wskp env](#wskp-env): work with deployment environment
+- [wskp deploy](#wskp-deploy): deploy project to OpenWhisk.
+- [wskp undeploy](#wskp-undeploy): undeploy project 
+- [wskp refresh](#wskp-refresh): update project description with deployed entities 
+- [wskp wipe](#wskp-wipe): remove all entities from the project namespace(s)
 - [wskp yo](#wskp-yo): stub generator
 
 ### `wskp update`
 
 Check for the `wskp` and `wsk` updates.
 
-### WIP: `wskp env`
+### `wskp env`
 
 Work with environments.
 
@@ -62,36 +65,41 @@ List all environments for the current project
 
 Set the current environment to `<envname>`. Resolve missing environment variables when needed.
 
-### WIP: `wskp project`
 
-Work with project. A project is a collection of OpenWhisk entities and environments.
-
-- [wskp project deploy](#wskp-project-deploy): deploy project
-- [wskp project undeploy](#wskp-project-undeploy): undeploy project
-- [wskp project sync](#wskp-project-sync): synchronize project with local resources
-- [wskp project refresh](#wskp-project-refresh): synchronize project with deployed resources
-
-#### `wskp project deploy`
+### `wskp deploy`
 
 Deploy project to OpenWhisk.
 
 ```bash
-Usage: wskp project deploy [options] <openwhisk.yml>
+Usage: wskp deploy [options] <openwhisk.yml>
   
 Command Options:
 
 -m, --mode [mode]      deployment mode (create|update) [create]
 ```  
 
-#### `wskp project undeploy`
+### `wskp undeploy`
 
 Undeploy project.
 
 ```bash
-Usage: wskp project undeploy [options] <openwhisk.yml>
+Usage: wskp undeploy [options] <openwhisk.yml>
 ```  
 
-#### `wskp project sync`
+### `wskp refresh`
+
+Update the project description with deployed entities.
+
+```bash
+Usage: wskp refresh [options]
+  
+Command Options:
+
+-f <format>, --format <format>]  output format (bash|yaml) [yaml]
+```  
+
+### `wskp sync`
+
 
 Update the deployment configuration based on the current directory structure.
 
@@ -107,15 +115,13 @@ This commands scans the following directories:
             <action>.js or <package.json>
          action-name.js
 
-#### `wskp project refresh`
-
-Export all OpenWhisk entities deployed in the current environment to a bash script.
 
 ### `wskp yo`
 
 Builtin stub generator based on [yeoman](http://yeoman.io/).
 
 - [wskp yo action](#wskp-yo-action): generate an action
+
 
 #### `wskp yo action`
 
