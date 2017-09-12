@@ -8,6 +8,7 @@ before_install:
   - npm i 
   - npm run compilenowatch
   - npm link
+  - tools/travis/bxsetup.sh
   
 install: 
   - cd $TRAVIS_BUILD_DIR

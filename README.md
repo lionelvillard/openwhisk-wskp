@@ -1,4 +1,4 @@
-[![Build Status](https://travis.ibm.com/villard/wskp.svg?branch=master)](https://travis.ibm.com/villard/wskp)
+[![Build Status](https://travis.ibm.com/villard/wskp.svg?token=bc6xtkRixk96zbXuAu7U&branch=master)](https://travis.ibm.com/villard/wskp)]
 
 # `wskp` (aka `wsk+`)
 
