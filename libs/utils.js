@@ -18,7 +18,7 @@ const path = require('path')
 const expandHomeDir = require('expand-home-dir')
 const { spawn, exec } = require('child_process')
 const openwhisk = require('openwhisk')
-const wskd = require('@openwhisk/deploy')
+const wskd = require('openwhisk-deploy')
 
 
 // Apply configuration to wsk args

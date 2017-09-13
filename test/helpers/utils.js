@@ -17,7 +17,7 @@ const fs = require('fs-extra')
 const openwhisk = require('openwhisk')
 const expandHomeDir = require('expand-home-dir')
 const path = require('path')
-const wskd = require('@openwhisk/deploy')
+const wskd = require('openwhisk-deploy')
 
 const before = ctx => async () => {
     fs.mkdirsSync('.tests');

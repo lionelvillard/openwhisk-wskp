@@ -1,19 +1,17 @@
 language: node_js
 node_js: node
 
+env:
+  - LATEST_WKD=true
+  - LATEST_WKD=false
+
 before_install:
-  - cd $TRAVIS_BUILD_DIR/..
-  - git clone https://github.com/lionelvillard/openwhisk-deploy.git --depth 3
-  - cd openwhisk-deploy
-  - npm i 
-  - npm run compilenowatch
-  - npm link
-  - cd $TRAVIS_BUILD_DIR
-  - tools/travis/bxsetup.sh
+  - cd $TRAVIS_BUILD_DIR/.. && $TRAVIS_BUILD_DIR/tools/travis/clonewsk.sh
+  - cd $TRAVIS_BUILD_DIR && tools/travis/bxsetup.sh
   
 install: 
   - npm install
-  - npm link @openwhisk/deploy
+  - if [ "$LATEST_WKD" = "true" ]; then npm link @openwhisk/deploy fi
 
 script: 
    - npm test
