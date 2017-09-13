@@ -2,8 +2,8 @@ language: node_js
 node_js: node
 
 env:
-  - LATEST_WKD=true
-  - LATEST_WKD=false
+  - LATEST_WSKD=true
+  - LATEST_WSKD=false
 
 before_install:
   - cd $TRAVIS_BUILD_DIR/.. && $TRAVIS_BUILD_DIR/tools/travis/clonewsk.sh
@@ -11,7 +11,7 @@ before_install:
   
 install: 
   - npm install
-  - if [ "$LATEST_WKD" = "true" ]; then npm link @openwhisk/deploy fi
+  - if [ "$LATEST_WSKD" = "true" ]; then npm link @openwhisk/deploy ; fi
 
 script: 
    - npm test
