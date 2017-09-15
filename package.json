@@ -7,7 +7,7 @@
   },
   "main": "dist/wskp.js",
   "scripts": {
-    "pretest": "tsc",
+    "pretest": "tsc && chmod +x dist/wskp.js",
     "compilenowatch": "tsc",
     "test": "mocha",
     "compile": "tsc -watch -p ./"
