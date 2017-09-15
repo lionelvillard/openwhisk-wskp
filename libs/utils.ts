@@ -22,7 +22,7 @@ const wskd = require('openwhisk-deploy')
 
 
 // Apply configuration to wsk args
-const fixupWskArgs = (argv, variables) => {
+export function fixupWskArgs(argv, variables) {
     if (!argv.includes('-u') && !argv.includes('--auth') && variables.auth)
         argv.push('-u', variables.auth)
     if (!argv.includes('--apihost') && variables.apihost)
@@ -31,7 +31,7 @@ const fixupWskArgs = (argv, variables) => {
         argv.push('-i')
 }
 
-const prepareWskCommand = (wskcmd, argv, options = {}) => {
+export function prepareWskCommand(wskcmd, argv, options = {}) {
     const variables = wskd.auth.resolveVariables(options)
 
     if (wskcmd !== 'property') {
@@ -49,7 +49,7 @@ const prepareWskCommand = (wskcmd, argv, options = {}) => {
     return `${wskConfigFile} wsk ${wskcmd} ${args}`
 }
 
-const spawnWskAndExit = (wskcmd, argv, options = {}) => {
+export function spawnWskAndExit(wskcmd, argv, options = {}) {
     const fullCmd = prepareWskCommand(wskcmd, argv, options)
 
     if (process.env.WSKP_DEBUG)
@@ -61,9 +61,9 @@ const spawnWskAndExit = (wskcmd, argv, options = {}) => {
         process.exit(code)
     })
 }
-exports.spawnWskAndExit = spawnWskAndExit
 
-const execWsk = (wskcmd, argv, options = {}) => new Promise((resolve, reject) => {
+export function execWsk(wskcmd, argv, options = {}) : Promise<string> {
+    return new Promise((resolve, reject) => {
     const fullCmd = prepareWskCommand(wskcmd, argv, options)
 
     if (process.env.WSKP_DEBUG)
@@ -78,26 +78,28 @@ const execWsk = (wskcmd, argv, options = {}) => new Promise((resolve, reject) =>
             resolve(stdout)
         }
     })
-})
-exports.execWsk = execWsk
+}) }
 
 // ---- options
 
-exports.options = {
-    GLOBAL: ['apihost', 'auth', 'insecure']
+export const options = {
+    GLOBAL: ['apihost', 'auth', 'cert', 'debug', 'insecure', 'verbose']
 }
 
 const wskoptions = {
     apihost: { flags: '--apihost <host>', desc: 'whisk API host' },
     auth: { flags: '-u, --auth <key>', desc: 'authorization key' },
-    insecure: { flags: '-i, --insecure', desc: 'bypass certificate checking' }
+    cert: { flags: '--cert <string>', desc: 'client cert' },
+    insecure: { flags: '-i, --insecure', desc: 'bypass certificate checking' },
+    debug: { flags: '-d, --debug', desc: 'debug level output' },
+    verbose: { flags: '-v', desc: 'verbose level output' },
 }
 
-const addOptions = (command, options) => {
+export function addOptions(command, options) {
     for (const name of options) {
         const option = wskoptions[name]
         if (option)
-            command.option(option.flags, option.desc)
+            command = command.option(option.flags, option.desc)
     }
+    return command;
 }
-exports.addOptions = addOptions

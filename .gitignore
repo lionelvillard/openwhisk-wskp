@@ -6,3 +6,5 @@ bin/whisk-libs
 test/fixtures/.wskprops
 test/fixtures/.wskprops.bak
 .wskprops
+dist
+*.map

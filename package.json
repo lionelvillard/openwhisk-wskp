@@ -3,32 +3,42 @@
   "version": "0.2.2",
   "description": "OpenWhisk command line with extensions",
   "bin": {
-    "wskp": "wskp.js"
+    "wskp": "dist/wskp.js"
   },
-  "main": "wskp.js",
+  "main": "dist/wskp.js",
   "scripts": {
+    "pretest": "tsc",
+    "compilenowatch": "tsc",
     "test": "mocha",
-    "link": "npm link openwhisk-deploy"
+    "compile": "tsc -watch -p ./"
+  },
+  "engines": {
+    "node": ">=8.0"
   },
   "keywords": [],
   "author": "Lionel Villard",
   "license": "Apache-2.0",
   "dependencies": {
-    "openwhisk-deploy": "^0.4.1",
     "chalk": "^1.1.3",
     "child-process-promise": "^2.2.1",
-    "commander-multi": "^2.11.0-multi.0",
     "expand-home-dir": "0.0.3",
     "fs-extra": "^4.0.1",
+    "minimist": "^1.2.0",
     "openwhisk": "^3.7.0",
+    "openwhisk-deploy": "^0.4.1",
     "properties-parser": "^0.3.1",
     "readline-sync": "^1.4.7",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
+    "semver": "^5.4.1",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
+    "@types/chalk": "^0.4.31",
+    "@types/minimist": "^1.2.0",
+    "@types/node": "^8.0.28",
     "chai": "^4.1.2",
-    "mocha": "^3.5.2"
+    "mocha": "^3.5.2",
+    "typescript": "^2.5.2"
   }
 }

@@ -18,18 +18,17 @@ const assert = require('assert');
 const utils = require('./helpers/utils');
 
 it('testing wskp with no args', async () => {
-    const output = await exec('./wskp.js')
-
+    const output = await exec('./dist/wskp.js');
     assert.ok(output.stdout.includes('Apache OpenWhisk CLI with extensions'));
 })
 
 describe('testing environment', function () {
-    const wskp = '../../wskp.js'
+    const wskp = '../../dist/wskp.js'
     const cwd = 'test/fixtures'
 
     it('with no args', async () => {
         const output = await exec(`${wskp} env`, { cwd });
-        assert.ok(output.stdout.includes('Usage: wskp-env <command> [options]'));
+        assert.ok(output.stdout.includes('Apache OpenWhisk CLI with extensions'));
     });
 
     it('env list', async () => {
@@ -43,8 +42,12 @@ describe('testing environment', function () {
     });
 
     it('env set invalid environment name', async () => {
-        const output = await exec(`${wskp} env set invalidenv`, { cwd })
-        assert.strictEqual(output.stderr, 'invalidenv does not exist\n');
+        try {
+            const output = await exec(`${wskp} env set invalidenv`, { cwd });
+            assert.ok(false);
+        } catch (e) {
+            assert.strictEqual(e.stderr, 'invalidenv does not exist\n');
+        }
     });
 });
 
@@ -53,28 +56,28 @@ describe('testing deploy', function () {
     before(utils.before(ctx));
     after(utils.after(ctx));
 
-    const wskp = './wskp.js'
+    const wskp = './dist/wskp.js'
 
     it('with no args', async () => {
         try {
             const output = await exec(`${wskp} deploy`)
             assert.ok(false);
         } catch (e) {
-            assert.strictEqual(e.stderr, 'error: missing configuration file\n');
+            assert.strictEqual(e.stderr, 'Error: missing configuration file\n');
         }
     });
 
     it('basic - mode create', async () => {
         const output = await exec(`${wskp} deploy test/fixtures/basic/basic.yaml`)
         assert.strictEqual(output.stdout, 'ok.\n');
-        const echo = await ctx.ow.actions.get({name: 'inline-code/echo'});
+        const echo = await ctx.ow.actions.get({ name: 'inline-code/echo' });
         assert.strictEqual(echo.name, 'echo');
     });
 
     it('basic - mode update', async () => {
         const output = await exec(`${wskp} deploy test/fixtures/basic/basic.yaml -m update`)
         assert.strictEqual(output.stdout, 'ok.\n');
-        const echo = await ctx.ow.actions.get({name: 'inline-code/echo'});
+        const echo = await ctx.ow.actions.get({ name: 'inline-code/echo' });
         assert.strictEqual(echo.name, 'echo');
     });
 
@@ -94,31 +97,31 @@ describe('testing undeploy', function () {
     before(utils.before(ctx));
     after(utils.after(ctx));
 
-    const wskp = './wskp.js'
+    const wskp = './dist/wskp.js'
 
     it('with no args', async () => {
         try {
             const output = await exec(`${wskp} undeploy`);
             assert.ok(false);
         } catch (e) {
-            assert.strictEqual(e.stderr, 'error: missing configuration file\n');
+            assert.strictEqual(e.stderr, 'Error: missing configuration file\n');
         }
     });
 
     it('basic - unmanaged', async () => {
         const output = await exec(`${wskp} deploy test/fixtures/basic/basic.yaml`);
         assert.strictEqual(output.stdout, 'ok.\n');
-        const echo = await ctx.ow.actions.get({name: 'inline-code/echo'});
+        const echo = await ctx.ow.actions.get({ name: 'inline-code/echo' });
         assert.strictEqual(echo.name, 'echo');
         const output2 = await exec(`${wskp} undeploy test/fixtures/basic/basic.yaml`);
         assert.strictEqual(output2.stdout, 'ok.\n');
         try {
-            const echo2 = await ctx.ow.actions.get({name: 'inline-code/echo'});
+            const echo2 = await ctx.ow.actions.get({ name: 'inline-code/echo' });
             assert.ok(false);
         } catch (e) {
             assert.strictEqual(e.statusCode, 404)
         }
-        
+
     });
 
 
