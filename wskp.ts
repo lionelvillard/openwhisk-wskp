@@ -18,7 +18,7 @@ if (!semver.satisfies(process.version, version)) {
 }
 
 if (!process.env.WSKP_NO_CHECK_UPDATE) {
-    updateNotifier({pkg, updateCheckInterval: 1000 * 60 * 60 * 24}).notify();
+    updateNotifier({ pkg, updateCheckInterval: 1000 * 60 * 60 * 24 }).notify();
 }
 
 const extensions = ['--help', '-V', '--version', '-h', 'deploy', 'wipe', 'undeploy', 'refresh', 'update', 'env', 'yo']
@@ -297,10 +297,17 @@ function checkExtraneousFlags(argv) {
 async function help() {
     console.log('Apache OpenWhisk CLI with extensions');
 
-    let wskhelp = await utils.execWsk('', ['--help']);
-    wskhelp = wskhelp.replace('wsk', 'wskp');
-    const patch = wskhelp.indexOf('Flags') - 2;
-    console.log(wskhelp.slice(0, patch));
+    let wskhelp;
+    let patch;
+    try {
+        wskhelp = await utils.execWsk('', ['--help']);
+        wskhelp = wskhelp.replace('wsk', 'wskp');
+        patch = wskhelp.indexOf('Flags') - 2;
+        console.log(wskhelp.slice(0, patch));
+    } catch (e) {
+        // wsk not found... ignore
+    }
+
 
     console.log('  env              work with environment');
     console.log('  env list         list environments');
@@ -313,17 +320,18 @@ async function help() {
     console.log('  yo project       initialize openwhisk project');
     console.log('  yo action        initialize openwhisk action');
 
-    console.log(wskhelp.slice(patch));
+    if (wskhelp)
+        console.log(wskhelp.slice(patch));
 
     console.log('')
-    console.log('  The api host and authorization key are individually determined in this order:')
+    console.log('  The location of .wskprops is determined in this order:')
     console.log('')
-    console.log(`    1. ${chalk.bold('-u auth')} and ${chalk.bold('--apihost')}`)
-    console.log('    2. $WSK_CONFIG_FILE')
-    console.log('    3. .wskprops in the current directory. If not found, look in the parent directory, until reaching the home directory')
+    console.log('    1. $WSK_CONFIG_FILE')
+    console.log('    2. .wskprops in the current directory. If not found, look in the parent directory, until reaching the home directory')
     console.log('')
+    console.log('  Each property value stored in .wskprops can be overriden by the CLI flags and then by environment variables.')
     console.log('')
-
+    
     process.exit(0);
 }
 
