@@ -8,7 +8,7 @@ import * as readline from 'readline-sync';
 import * as yaml from 'yamljs';
 import { exec } from 'child-process-promise';
 import * as semver from 'semver';
-
+import * as updateNotifier from 'update-notifier';
 const pkg = require('../package.json');
 
 const version = pkg.engines.node;
@@ -17,17 +17,17 @@ if (!semver.satisfies(process.version, version)) {
     process.exit(1);
 }
 
+if (!process.env.WSKP_NO_CHECK_UPDATE) {
+    updateNotifier({pkg, updateCheckInterval: 1000 * 60 * 60 * 24}).notify();
+}
+
 const extensions = ['--help', '-V', '--version', '-h', 'deploy', 'wipe', 'undeploy', 'refresh', 'update', 'env', 'yo']
 
 async function run() {
-    //if (await wske.update()) {
-    //    console.log(chalk.yellow(`A new version fo this CLI is available there: https://console.bluemix.net/openwhisk/learn/cli`))
-    //}
-
     const argv = minimist(process.argv.slice(2));
 
     if (argv.help && argv._.length === 0) {
-        help();
+        await help();
     }
 
     if (process.argv.length > 2 && !extensions.includes(process.argv[2])) {
@@ -57,7 +57,7 @@ async function run() {
             await yo(argv);
             break;
         default:
-            help();
+            await help();
     }
 }
 
@@ -187,16 +187,15 @@ async function env(argv) {
 
     switch (cmd) {
         case 'set':
-            envSet(argv);
+            await envSet(argv);
             break;
         case 'list':
-            envList(argv);
+            await envList(argv);
             break;
         default:
-            help();
+            await help();
     }
 }
-
 
 async function envSet(argv) {
     if (argv.help) {
@@ -243,17 +242,6 @@ async function yo(argv) {
             break;
         default:
             help();
-    }
-}
-
-async function update(argv) {
-    console.log('Updating...')
-    const version = await exec('npm show wskp version')
-    if (version && version !== pkg.version) {
-        console.log(chalk.yellow('A new version of this CLI is available. Updating...'))
-        await exec('npm update wskp -g')
-    } else {
-        console.log('wskp is up to date')
     }
 }
 

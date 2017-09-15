@@ -9,7 +9,7 @@
   "scripts": {
     "pretest": "tsc && chmod +x dist/wskp.js",
     "compilenowatch": "tsc",
-    "test": "mocha",
+    "test": "env WSKP_NO_CHECK_UPDATE=1 mocha",
     "compile": "tsc -watch -p ./"
   },
   "engines": {
@@ -31,6 +31,7 @@
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
     "semver": "^5.4.1",
+    "update-notifier": "^2.2.0",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
