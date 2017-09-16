@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/lionelvillard/openwhisk-wskp.svg?branch=master)](https://travis-ci.org/lionelvillard/openwhisk-wskp)]
+[![Build Status](https://travis-ci.org/lionelvillard/openwhisk-wskp.svg?branch=master)](https://travis-ci.org/lionelvillard/openwhisk-wskp)
 
 # `wskp` (aka `wsk+`)
 
@@ -6,11 +6,9 @@
 
 ## Installing
 
- 
 
 ```bash
-$ npm login --registry=https://npm-registry.whitewater.ibm.com --scope=@openwhisk
-$ npm install @openwhisk/wskp -g
+$ npm install openwhisk-wskp -g
 $ wskp
 
 Usage: wskp <command> [options]
@@ -19,11 +17,11 @@ Usage: wskp <command> [options]
 
 ## `.wskprops`
 
-`wsk` configuration parameters (i.e. `AUTH`, `APIHOST`, ...) are stored in a file called `.wskprops`. The value of these parameters is resolved as follows:
+`wskp` configuration parameters (i.e. `AUTH`, `APIHOST`, ...) are stored in a file called `.wskprops`. The value of these parameters is resolved as follows:
 1. value specified on the CLI (i.e. `-u`)
+1. value specified in the environment (`$AUTH`, `$APIHOST`, ...)
 1. the value stored in `$WSK_CONFIG_FILE`
-1. `wskp` only: the value stored in `.wskprops` located in the current directory. If no `.wskprops` exists, look in the parent directory until reaching the user home directory 
-1. `wsk` only: the value stored in `.wskprops` located in the user home directory
+1. the value stored in `.wskprops` located in the current directory. If no `.wskprops` exists, look in the parent directory until reaching the user home directory 
 
 ## Commands
 
@@ -129,12 +127,11 @@ Generate an action.
 The package and action names are inferred by analyzing the current directory structure (see [sync](#wskp-project-sync)).
 
 
-
 # Development
 
 ```bash
-$ git clone git@github.ibm.com:villard/wskp.git
-$ cd wskp
+$ https://github.com/lionelvillard/openwhisk-wskp
+$ cd openwhisk-wskp
 $ npm i
 ```
 
