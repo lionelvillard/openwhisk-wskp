@@ -300,8 +300,8 @@ async function help() {
     let wskhelp;
     let patch;
     try {
-        wskhelp = await utils.execWsk('', ['--help']);
-        wskhelp = wskhelp.replace('wsk', 'wskp');
+        wskhelp = await utils.execWsk('', []);
+        wskhelp = wskhelp.replace(/wsk/g, 'wskp');
         patch = wskhelp.indexOf('Flags') - 2;
         console.log(wskhelp.slice(0, patch));
     } catch (e) {
