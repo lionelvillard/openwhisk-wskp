@@ -160,7 +160,7 @@ async function refresh(argv) {
     checkExtraneousFlags(argv);
 
     let target = 3;
-    if (format.format === 'bash')
+    if (format === 'bash')
         target = 2;
 
     try {
