@@ -85,7 +85,7 @@ async function deploy(argv) {
     try {
         const ow = wskd.auth.initWsk(global);
 
-        await wskd.deploy({
+        await wskd.deploy.apply({
             ow,
             basePath: '.',
             cache: '.openwhisk',
