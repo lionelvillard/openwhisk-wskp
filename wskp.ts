@@ -72,7 +72,7 @@ async function deploy(argv) {
     }
     checkExtraneous(argv);
 
-    if (! await fs.exists(file)) {
+    if (! await fs.pathExists(file)) {
         console.log(error(`Error: ${file} does not exists`))
         process.exit(1)
     }
@@ -130,14 +130,15 @@ async function undeploy(argv) {
 
 async function wipe(argv) {
     if (argv.help) {
-        helpCommand('wskp wipe');
+        helpCommand('wskp wipe', ['-f, --force']);
     }
     checkExtraneous(argv);
     const logger_level = getLoggerLevel(argv);
     const global = getGlobalFlags(argv);
+    const force = consume(argv, ['f', 'force']);
     checkExtraneousFlags(argv);
 
-    if (readline.keyInYN(`${chalk.red('DANGER ZONE')}: are you sure you want to delete *all* deployed OpenWhisk entities?`)) {
+    if (force || readline.keyInYN(`${chalk.red('DANGER ZONE')}: are you sure you want to delete ${chalk.bold('all')} deployed OpenWhisk entities?`)) {
         try {
             const ow = await wskd.auth.initWsk(global);
 
@@ -226,7 +227,7 @@ async function envList(argv) {
     const global = getGlobalFlags(argv);
     checkExtraneousFlags(argv);
 
-    const envs = await wskd.env.getEnvironments()
+    const envs : any = await wskd.env.getEnvironments()
     envs.forEach(item => console.log(item))
 }
 

@@ -69,14 +69,12 @@ describe('testing deploy', function () {
 
     it('basic - mode create', async () => {
         const output = await exec(`${wskp} deploy test/fixtures/basic/basic.yaml`)
-        assert.strictEqual(output.stdout, 'ok.\n');
         const echo = await ctx.ow.actions.get({ name: 'inline-code/echo' });
         assert.strictEqual(echo.name, 'echo');
     });
 
     it('basic - mode update', async () => {
         const output = await exec(`${wskp} deploy test/fixtures/basic/basic.yaml -m update`)
-        assert.strictEqual(output.stdout, 'ok.\n');
         const echo = await ctx.ow.actions.get({ name: 'inline-code/echo' });
         assert.strictEqual(echo.name, 'echo');
     });
@@ -110,11 +108,9 @@ describe('testing undeploy', function () {
 
     it('basic - unmanaged', async () => {
         const output = await exec(`${wskp} deploy test/fixtures/basic/basic.yaml`);
-        assert.strictEqual(output.stdout, 'ok.\n');
         const echo = await ctx.ow.actions.get({ name: 'inline-code/echo' });
         assert.strictEqual(echo.name, 'echo');
         const output2 = await exec(`${wskp} undeploy test/fixtures/basic/basic.yaml`);
-        assert.strictEqual(output2.stdout, 'ok.\n');
         try {
             const echo2 = await ctx.ow.actions.get({ name: 'inline-code/echo' });
             assert.ok(false);
