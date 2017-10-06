@@ -9,6 +9,9 @@ import * as yaml from 'yamljs';
 import { exec } from 'child-process-promise';
 import * as semver from 'semver';
 import * as updateNotifier from 'update-notifier';
+import * as getPort from 'get-port';
+import * as rp from 'request-promise';
+import * as path from 'path';
 const pkg = require('../package.json');
 
 const version = pkg.engines.node;
@@ -21,43 +24,120 @@ if (!process.env.WSKP_NO_CHECK_UPDATE) {
     updateNotifier({ pkg, updateCheckInterval: 1000 * 60 * 60 * 24 }).notify();
 }
 
-const extensions = ['--help', '-V', '--version', '-h', 'deploy', 'wipe', 'undeploy', 'refresh', 'update', 'env', 'yo']
+const extensions = ['--help', '-V', '--version', '-h', 'deploy', 'wipe', 'undeploy', 'refresh', 'update', 'env', 'yo', 'start', 'action'];
 
 async function run() {
-    const argv = minimist(process.argv.slice(2));
+    try {
+        const argv = minimist(utils.fixupKeyValue(process.argv.slice(2)));
 
-    if (argv.help && argv._.length === 0) {
-        await help();
+        if (argv.help && argv._.length === 0) {
+            await help();
+        }
+
+        if (process.argv.length > 2 && !extensions.includes(process.argv[2])) {
+            return utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
+        }
+
+        const cmd = argv._.shift();
+
+        switch (cmd) {
+            case 'action':
+                return action(argv);
+            case 'deploy':
+                return deploy(argv);
+            case 'undeploy':
+                return undeploy(argv);
+            case 'wipe':
+                return wipe(argv);
+            case 'refresh':
+                return refresh(argv);
+            case 'env':
+                return env(argv);
+            case 'yo':
+                return yo(argv);
+            case 'start':
+                return start(argv);
+            default:
+                return help();
+        }
+    } catch (e) {
+        console.error(e);
+        process.exit(1);
     }
+}
 
-    if (process.argv.length > 2 && !extensions.includes(process.argv[2])) {
-        utils.spawnWskAndExit(process.argv[2], process.argv.slice(3))
-        return
+async function action(argv) {
+    if (argv.help) {
+        return utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
     }
 
     const cmd = argv._.shift();
+    if (cmd === 'invoke') {
+        return actionInvoke(argv);
+    }
+    return utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
+}
 
-    switch (cmd) {
-        case 'deploy':
-            await deploy(argv);
-            break;
-        case 'undeploy':
-            await undeploy(argv);
-            break;
-        case 'wipe':
-            await wipe(argv);
-            break;
-        case 'refresh':
-            await refresh(argv);
-            break;
-        case 'env':
-            await env(argv);
-            break;
-        case 'yo':
-            await yo(argv);
-            break;
-        default:
-            await help();
+async function actionInvoke(argv) {
+    if (argv.help) {
+        return utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
+    }
+
+    const actioname = argv._.shift();
+    if (!actioname) {
+        error('Invalid argument(s). An action name is required.');
+    }
+    const logger_level = getLoggerLevel(argv);
+    const global = getGlobalFlags(argv);
+    const debugport = consume(argv, ['debugport']) || false;
+    const blocking = consume(argv, ['b', 'blocking']) || false;
+    const result = consume(argv, ['r', 'result']) || false;
+    const p = consume(argv, ['p']);
+    const param = consume(argv, ['param']);
+    const body = {};
+    if (p) {
+        p.forEach(kv => {
+            const eqi = kv.indexOf('=');
+            body[kv.substring(0, eqi)] = kv.substr(eqi + 1);
+        });
+    }
+    if (param) {
+        param.forEach(kv => {
+            const eqi = kv.indexOf('=');
+            body[kv.substring(0, eqi)] = kv.substr(eqi + 1);
+        });
+    }
+
+    const vars = wskd.auth.resolveVariables(global);
+    const wskpropPath = wskd.auth.getWskPropsFile();
+    const wskpproject = wskpropPath ? path.dirname(path.resolve(wskpropPath)) : false;
+
+    const coloni = vars.auth.indexOf(':');
+    const user = vars.auth.substring(0, coloni);
+    const pass = vars.auth.substring(coloni + 1);
+
+    const { namespace, pkg, name } = wskd.names.parseQName(wskd.names.resolveQName(actioname, '_', ''));
+    const uri = `https://${vars.apihost}/api/v1/namespaces/${namespace}/actions${pkg ? `/${pkg}` : ''}/${name}`;
+    try {
+        const response = await rp({
+            method: 'POST',
+            uri,
+            auth: {
+                user,
+                pass
+            },
+            qs: {
+                blocking,
+                result,
+                debugport
+            },
+            json: true,
+            strictSSL: !global.insecure, // TODO: fix bug in wskd.auth.
+            body
+        });
+        console.log(JSON.stringify(response, null, 2));
+    } catch (e) {
+        error(e.message);
     }
 }
 
@@ -68,12 +148,12 @@ async function deploy(argv) {
     const file = argv._.shift();
 
     if (!file) {
-        error('Error: missing configuration file');
+        error('missing configuration file');
     }
     checkExtraneous(argv);
 
     if (! await fs.pathExists(file)) {
-        console.log(error(`Error: ${file} does not exists`))
+        console.log(error(`${file} does not exists`))
         process.exit(1)
     }
 
@@ -105,7 +185,7 @@ async function undeploy(argv) {
     }
     const file = argv._.shift();
     if (!file) {
-        error('Error: missing configuration file');
+        error('missing configuration file');
     }
     checkExtraneous(argv);
     const logger_level = getLoggerLevel(argv);
@@ -204,7 +284,7 @@ async function envSet(argv) {
     }
     const env = argv._.shift();
     if (!env) {
-        error('Error: missing configuration file');
+        error('missing configuration file');
     }
     checkExtraneous(argv);
     const logger_level = getLoggerLevel(argv);
@@ -227,7 +307,7 @@ async function envList(argv) {
     const global = getGlobalFlags(argv);
     checkExtraneousFlags(argv);
 
-    const envs : any = await wskd.env.getEnvironments()
+    const envs: any = await wskd.env.getEnvironments()
     envs.forEach(item => console.log(item))
 }
 
@@ -245,6 +325,31 @@ async function yo(argv) {
             help();
     }
 }
+
+
+async function start(argv) {
+    if (argv.help) {
+        helpCommand('wskp start');
+    }
+    checkExtraneous(argv);
+    const logger_level = getLoggerLevel(argv);
+
+    await wskd.controller.init({
+        cache: '.openwhisk',
+        logger_level
+    });
+
+    const port = await getPort({ port: 3000 });
+
+    const server = wskd.controller.start(port);
+    console.log(`start listening ${chalk.bold('localhost:' + port)}`);
+}
+
+process.on('SIGINT', async () => {
+    console.log('stopping containers...')
+    await wskd.controller.stop();
+    process.exit(0);
+});
 
 function getLoggerLevel(argv) {
     const verbose = consume(argv, ['v', 'verbose']);
@@ -268,7 +373,7 @@ function getGlobalFlags(argv) {
 }
 
 function error(msg: string) {
-    console.error(chalk.red(msg));
+    console.error(`${chalk.red('error: ')}${msg}`);
     process.exit(1);
 }
 
@@ -313,10 +418,11 @@ async function help() {
     console.log('  env              work with environment');
     console.log('  env list         list environments');
     console.log('  env set          set current environment');
-    console.log('  deploy           apply deployment configuration');
-    console.log('  undeploy         remove deployed resources in configuration');
+    console.log('  deploy           apply project configuration');
+    console.log('  undeploy         remove deployed resources in project configuration');
+    console.log('  start            start openwhisk server backed by local project resources');
     console.log('  wipe             remove deployed resources in namespace');
-    console.log('  import           update deployment configuration with deployed resources');
+    console.log('  import           update project configuration with deployed resources');
     console.log('  yo               generate stubs');
     console.log('  yo project       initialize openwhisk project');
     console.log('  yo action        initialize openwhisk action');
@@ -332,7 +438,7 @@ async function help() {
     console.log('')
     console.log('  Each property value stored in .wskprops can be overriden by the CLI flags and then by environment variables.')
     console.log('')
-    
+
     process.exit(0);
 }
 

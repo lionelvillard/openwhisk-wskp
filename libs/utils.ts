@@ -58,7 +58,7 @@ export function prepareWskCommand(wskcmd, argv, options = {}) {
 export function spawnWskAndExit(wskcmd, argv, options = {}) {
     // handle wskp property set bx 
     if (argv.length >= 3 && argv[0] === 'set' && argv[1] === 'bx') {
-        conf.set('bx', argv[2] === 'true' ||  argv[2] === '1');
+        conf.set('bx', argv[2] === 'true' || argv[2] === '1');
         process.exit(0);
     }
 
@@ -96,6 +96,24 @@ export function execWsk(wskcmd, argv, options = {}): Promise<string> {
             }
         })
     })
+}
+
+// transform options of the form --flag K V to --flag K=V 
+export function fixupKeyValue(args: string[]): string[] {
+    const r = [];
+    for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+        if (arg === '-p' || arg === '--param' || arg === '-P' || arg === '--param-file') {
+            if (args.length > i + 2) {
+                r.push(arg);
+                r.push(`${args[++i]}=${args[++i]}`);
+            } else
+                throw `${chalk.red('error:')} Failed to parse arguments: The parameter arguments are invalid: Arguments for '${arg}' must be a key/value pair`;
+        } else {
+            r.push(arg);
+        }
+    }
+    return r;
 }
 
 // ---- options
