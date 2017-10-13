@@ -1,0 +1,14 @@
+{
+  "packages": {
+    "inline-code": {
+      "actions": {
+        "echo": {
+          "kind": "nodejs:6",
+          "code": "console.log(params)\nreturn params || {}\n",
+          "_qname": "/_/inline-code/echo"
+        }
+      }
+    }
+  },
+  "namespace": "_"
+}

@@ -108,8 +108,10 @@ async function actionInvoke(argv) {
         });
     }
 
-    const vars = wskd.auth.resolveVariables(global);
-    const wskpropPath = wskd.auth.getWskPropsFile();
+    const config: wskd.types.Config = {};
+    
+    const vars = await wskd.env.resolveVariables(config, global);
+    const wskpropPath = await wskd.env.getWskPropsFile(config);
     const wskpproject = wskpropPath ? path.dirname(path.resolve(wskpropPath)) : false;
 
     const coloni = vars.auth.indexOf(':');
@@ -143,7 +145,8 @@ async function actionInvoke(argv) {
 
 async function deploy(argv) {
     if (argv.help) {
-        helpCommand('wskp deploy <config.yml>', ['-m, --mode [mode]', 'deployment mode (create|update) [create]']);
+        helpCommand('wskp deploy <project.yml>', ['-m, --mode [mode]     deployment mode (create|update) [create]', 
+                                                  '-e, --env  [envname]  targeted environment name. Default to <current>']);
     }
     const file = argv._.shift();
 
@@ -159,20 +162,21 @@ async function deploy(argv) {
 
     const logger_level = getLoggerLevel(argv);
     const global = getGlobalFlags(argv);
-    const mode = consume(argv, ['m', 'mode']) || 'create';
+    const mode = consume(argv, ['m', 'mode']) || 'create'; 
     checkExtraneousFlags(argv);
 
     try {
-        const ow = wskd.auth.initWsk(global);
-
-        await wskd.deploy.apply({
-            ow,
+        const config: wskd.types.Config = {
             basePath: '.',
             cache: '.openwhisk',
             location: file,
             logger_level,
-            force: mode === 'update'
-        });
+            force: mode === 'update',
+            envname: global.env
+        }
+
+        await wskd.env.initWsk(config, global);
+        await wskd.deploy.apply(config);
         console.log(chalk.green('ok.'));
     } catch (e) {
         console.log(chalk.red(`not ok: ${e}`));
@@ -193,15 +197,15 @@ async function undeploy(argv) {
     checkExtraneousFlags(argv);
 
     try {
-
-        const ow = wskd.auth.initWsk(global)
-        await wskd.undeploy.apply({
-            ow,
+        const config : wskd.types.Config = {
             basePath: '.',
             cache: '.openwhisk',
             location: file,
             logger_level
-        });
+        }
+
+        await wskd.env.initWsk(config, global);
+        await wskd.undeploy.apply(config);
         console.log(chalk.green('ok.'));
     } catch (e) {
         console.log(chalk.red(`not ok: ${e}`));
@@ -220,9 +224,10 @@ async function wipe(argv) {
 
     if (force || readline.keyInYN(`${chalk.red('DANGER ZONE')}: are you sure you want to delete ${chalk.bold('all')} deployed OpenWhisk entities?`)) {
         try {
-            const ow = await wskd.auth.initWsk(global);
+            const config : wskd.types.Config = {logger_level};
+            await wskd.env.initWsk(config, global);
 
-            await wskd.undeploy.apply({ ow, logger_level });
+            await wskd.undeploy.apply(config);
             console.log(chalk.green('ok.'));
         } catch (e) {
             console.log(chalk.red(`not ok: ${e}`));
@@ -245,13 +250,9 @@ async function refresh(argv) {
         target = 2;
 
     try {
-        const ow = wskd.auth.initWsk(global)
-
-        const output = await wskd.refresh.apply({
-            ow,
-            logger_level,
-            target
-        });
+        const config: wskd.refresh.Config = { logger_level, target };
+        await wskd.env.initWsk(config, global);
+        const output = await wskd.refresh.apply(config);
 
         if (target === 3) {
             console.log(yaml.stringify(output, 16, 2));
@@ -280,20 +281,22 @@ async function env(argv) {
 
 async function envSet(argv) {
     if (argv.help) {
-        helpCommand('wskp env set <env>');
+        helpCommand('wskp env set <env> [project.yml]');
     }
-    const env = argv._.shift();
-    if (!env) {
-        error('missing configuration file');
+    const envname = argv._.shift();
+    if (!envname) {
+        error('missing environment name');
     }
+    const location = argv._.shift(); // might be null
+
     checkExtraneous(argv);
     const logger_level = getLoggerLevel(argv);
     const global = getGlobalFlags(argv);
     checkExtraneousFlags(argv);
 
-    const changed = await wskd.env.setEnvironment(env)
+    const changed = await wskd.env.setEnvironment({logger_level, location, basePath: '.',  cache: '.openwhisk', envname});
     if (!changed) {
-        error(`${env} does not exist`)
+        error(`${env} does not exist`);
     }
 }
 
@@ -307,7 +310,7 @@ async function envList(argv) {
     const global = getGlobalFlags(argv);
     checkExtraneousFlags(argv);
 
-    const envs: any = await wskd.env.getEnvironments()
+    const envs: any = await wskd.env.getEnvironments({logger_level});
     envs.forEach(item => console.log(item))
 }
 
@@ -325,7 +328,6 @@ async function yo(argv) {
             help();
     }
 }
-
 
 async function start(argv) {
     if (argv.help) {
@@ -346,7 +348,6 @@ async function start(argv) {
 }
 
 process.on('SIGINT', async () => {
-    console.log('stopping containers...')
     await wskd.controller.stop();
     process.exit(0);
 });
@@ -368,7 +369,8 @@ function getGlobalFlags(argv) {
         auth: consume(argv, ['u', 'auth']),
         cert: consume(argv, ['cert']),
         insecure: consume(argv, ['i', 'insecure']),
-        key: consume(argv, ['key'])
+        key: consume(argv, ['key']),
+        env: consume(argv, ['e', 'env'])
     }
 }
 
@@ -427,8 +429,9 @@ async function help() {
     console.log('  yo project       initialize openwhisk project');
     console.log('  yo action        initialize openwhisk action');
 
-    if (wskhelp)
+    if (wskhelp) {
         console.log(wskhelp.slice(patch));
+    }
 
     console.log('')
     console.log('  The location of .wskprops is determined in this order:')
@@ -461,6 +464,7 @@ async function globalFlagsHelp() {
     wskhelp = wskhelp.replace('wsk', 'wskp');
     const patch = wskhelp.indexOf('Flags') - 2;
     console.log(wskhelp.slice(patch));
+    console.log(' -e, --env                  environment name');
 }
 
 run();
