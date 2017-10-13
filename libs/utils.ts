@@ -38,7 +38,7 @@ export function fixupWskArgs(argv, variables) {
 
 export function prepareWskCommand(wskcmd, argv, options = {}) {
     const bx = conf.get('bx') ? 'bx ' : '';
-    const variables = wskd.auth.resolveVariables(options)
+    const variables = wskd.env.resolveVariables({}, options)
 
     if (wskcmd !== 'property') {
         fixupWskArgs(argv, variables)
@@ -46,7 +46,7 @@ export function prepareWskCommand(wskcmd, argv, options = {}) {
 
     let wskConfigFile = ''
     if (wskcmd === 'property') {
-        const wskPropsFile = wskd.auth.getWskPropsFile()
+        const wskPropsFile = wskd.env.getWskPropsFile();
         if (wskPropsFile)
             wskConfigFile = `WSK_CONFIG_FILE=${wskPropsFile}`
     }
