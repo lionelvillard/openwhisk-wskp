@@ -12,7 +12,7 @@ before_install:
   
 install: 
   - npm install
-  - if [ "$LATEST_WSKD" = "true" ]; then npm link @openwhisk-deploy ; fi
+  - if [ "$LATEST_WSKD" = "true" ]; then npm link openwhisk-deploy ; fi
 
 script: 
    - npm test
