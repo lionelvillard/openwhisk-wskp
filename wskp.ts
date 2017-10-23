@@ -24,7 +24,7 @@ if (!process.env.WSKP_NO_CHECK_UPDATE) {
     updateNotifier({ pkg, updateCheckInterval: 1000 * 60 * 60 * 24 }).notify();
 }
 
-const extensions = ['--help', '-V', '--version', '-h', 'deploy', 'wipe', 'undeploy', 'refresh', 'update', 'env', 'yo', 'start', 'action'];
+const extensions = ['--help', '-V', '--version', '-h', 'deploy', 'wipe', 'undeploy', 'refresh', 'update', 'env', 'yo', 'start', 'action', 'version'];
 
 async function run() {
     try {
@@ -35,7 +35,7 @@ async function run() {
         }
 
         if (process.argv.length > 2 && !extensions.includes(process.argv[2])) {
-            return utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
+            return await utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
         }
 
         const cmd = argv._.shift();
@@ -57,6 +57,9 @@ async function run() {
                 return yo(argv);
             case 'start':
                 return start(argv);
+            case 'version':
+                return changeVersion(argv);
+
             default:
                 return help();
         }
@@ -68,19 +71,19 @@ async function run() {
 
 async function action(argv) {
     if (argv.help) {
-        return utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
+        return await utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
     }
 
     const cmd = argv._.shift();
     if (cmd === 'invoke') {
         return actionInvoke(argv);
     }
-    return utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
+    return await utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
 }
 
 async function actionInvoke(argv) {
     if (argv.help) {
-        return utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
+        return await utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
     }
 
     const actioname = argv._.shift();
@@ -109,7 +112,7 @@ async function actionInvoke(argv) {
     }
 
     const config: wskd.types.Config = {};
-    
+
     const vars = await wskd.env.resolveVariables(config, global);
     const wskpropPath = await wskd.env.getWskPropsFile(config);
     const wskpproject = wskpropPath ? path.dirname(path.resolve(wskpropPath)) : false;
@@ -145,8 +148,8 @@ async function actionInvoke(argv) {
 
 async function deploy(argv) {
     if (argv.help) {
-        helpCommand('wskp deploy <project.yml>', ['-m, --mode [mode]     deployment mode (create|update) [create]', 
-                                                  '-e, --env  [envname]  targeted environment name. Default to <current>']);
+        helpCommand('wskp deploy <project.yml>', ['-m, --mode [mode]     deployment mode (create|update) [create]',
+            '-e, --env  [envname]  targeted environment name. Default to <current>']);
     }
     const file = argv._.shift();
 
@@ -162,20 +165,15 @@ async function deploy(argv) {
 
     const logger_level = getLoggerLevel(argv);
     const global = getGlobalFlags(argv);
-    const mode = consume(argv, ['m', 'mode']) || 'create'; 
+    const mode = consume(argv, ['m', 'mode']) || 'create';
     checkExtraneousFlags(argv);
 
     try {
-        const config: wskd.types.Config = {
-            basePath: '.',
-            cache: '.openwhisk',
-            location: file,
-            logger_level,
-            force: mode === 'update',
-            envname: global.env
-        }
+        const config = wskd.init.newConfig(file, logger_level, global.env);
+        config.force = mode === 'update';
+        config.flags = global;
 
-        await wskd.env.initWsk(config, global);
+        await wskd.init.init(config);
         await wskd.deploy.apply(config);
         console.log(chalk.green('ok.'));
     } catch (e) {
@@ -197,7 +195,7 @@ async function undeploy(argv) {
     checkExtraneousFlags(argv);
 
     try {
-        const config : wskd.types.Config = {
+        const config: wskd.types.Config = {
             basePath: '.',
             cache: '.openwhisk',
             location: file,
@@ -224,7 +222,7 @@ async function wipe(argv) {
 
     if (force || readline.keyInYN(`${chalk.red('DANGER ZONE')}: are you sure you want to delete ${chalk.bold('all')} deployed OpenWhisk entities?`)) {
         try {
-            const config : wskd.types.Config = {logger_level};
+            const config: wskd.types.Config = { logger_level };
             await wskd.env.initWsk(config, global);
 
             await wskd.undeploy.apply(config);
@@ -281,12 +279,12 @@ async function env(argv) {
 
 async function envSet(argv) {
     if (argv.help) {
-        helpCommand('wskp env set <env> [project.yml]');
+        helpCommand('wskp env set env [project.yml]');
     }
-    const envname = argv._.shift();
-    if (!envname) {
-        error('missing environment name');
-    }
+    const env = argv._.shift();
+    if (!env)
+        error('missing environment');
+
     const location = argv._.shift(); // might be null
 
     checkExtraneous(argv);
@@ -294,9 +292,15 @@ async function envSet(argv) {
     const global = getGlobalFlags(argv);
     checkExtraneousFlags(argv);
 
-    const changed = await wskd.env.setEnvironment({logger_level, location, basePath: '.',  cache: '.openwhisk', envname});
-    if (!changed) {
-        error(`${env} does not exist`);
+    const config = wskd.init.newConfig(location, logger_level, env);
+
+    try {
+        await wskd.init.init(config);
+        await wskd.env.setEnvironment(config);
+        console.log(chalk.green('ok.'));
+    } catch (e) {
+        config.setProgress('');
+        error(e);
     }
 }
 
@@ -310,8 +314,12 @@ async function envList(argv) {
     const global = getGlobalFlags(argv);
     checkExtraneousFlags(argv);
 
-    const envs: any = await wskd.env.getEnvironments({logger_level});
-    envs.forEach(item => console.log(item))
+    const config = wskd.init.newConfig(null, logger_level);
+    await wskd.init.init(config);
+
+    const envs: any = await wskd.env.getEnvironments(config);
+    console.log(chalk.bold('Name / Writable'))
+    envs.forEach(item => console.log(`${item.name} / ${item.writable ? 'true' : 'false'}`));
 }
 
 async function yo(argv) {
@@ -328,6 +336,38 @@ async function yo(argv) {
             help();
     }
 }
+
+
+async function changeVersion(argv) {
+    if (argv.help) {
+        helpCommand('wskp version <project.yml> (major | premajor | minor | preminor | patch | prepatch | prerelease)');
+    }
+    const projectPath = argv._.shift();
+    if (!projectPath)
+        error('missing configuration file');
+
+    const increment = argv._.shift();
+    if (!increment)
+        error('missing release type');
+
+    checkExtraneous(argv);
+    const logger_level = getLoggerLevel(argv);
+    const global = getGlobalFlags(argv);
+    checkExtraneousFlags(argv);
+
+    const config = wskd.init.newConfig(projectPath);
+    try {
+
+        await wskd.init.init(config);
+        wskd.env.incVersion(config, increment);
+        console.log(chalk.green('ok.'));
+    } catch (e) {
+        config.setProgress('');
+        error(e);
+    }
+
+}
+
 
 async function start(argv) {
     if (argv.help) {

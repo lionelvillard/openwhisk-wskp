@@ -26,43 +26,32 @@ import * as chalk from 'chalk';
 
 const conf = new Configstore(pkg.name, { 'bx': false });
 
-// Apply configuration to wsk args
-export function fixupWskArgs(argv, variables) {
-    if (!argv.includes('-u') && !argv.includes('--auth') && variables.auth)
-        argv.push('-u', variables.auth)
-    if (!argv.includes('--apihost') && variables.apihost)
-        argv.push('--apihost', variables.apihost)
-    if (!argv.includes('-i') && variables.ignore_certs)
-        argv.push('-i')
-}
-
-export function prepareWskCommand(wskcmd, argv, options = {}) {
+export async function prepareWskCommand(wskcmd, argv, options = {}) {
     const bx = conf.get('bx') ? 'bx ' : '';
-    const variables = wskd.env.resolveVariables({}, options)
 
-    if (wskcmd !== 'property') {
-        fixupWskArgs(argv, variables)
+    let envname;
+    const envIdx = argv.indexOf('-e');
+    if (envIdx > 0) {
+        if (envIdx + 1 >= argv.length)
+            throw `expecting envname after -e`;
+        envname = argv[envIdx + 1];    
     }
-
-    let wskConfigFile = ''
-    if (wskcmd === 'property') {
-        const wskPropsFile = wskd.env.getWskPropsFile();
-        if (wskPropsFile)
-            wskConfigFile = `WSK_CONFIG_FILE=${wskPropsFile}`
-    }
-
+    const config = {envname};
+    await wskd.init.init(config);
+    const wskPropsFile = await wskd.env.getWskPropsFile(config);
+    let wskConfigFile = wskPropsFile ? `WSK_CONFIG_FILE=${wskPropsFile}` : '';
     const args = argv.map(item => `'${item.replace(/'/, `\\'`)}'`).join(' ')
     return `${wskConfigFile} ${bx} wsk ${wskcmd} ${args}`
 }
 
-export function spawnWskAndExit(wskcmd, argv, options = {}) {
+export async function spawnWskAndExit(wskcmd, argv, options = {}) {
     // handle wskp property set bx 
     if (argv.length >= 3 && argv[0] === 'set' && argv[1] === 'bx') {
         conf.set('bx', argv[2] === 'true' || argv[2] === '1');
         process.exit(0);
     }
 
-    const fullCmd = prepareWskCommand(wskcmd, argv, options)
+    const fullCmd = await prepareWskCommand(wskcmd, argv, options)
 
     if (process.env.WSKP_DEBUG)
         console.error(`spawn ${fullCmd}`)
