@@ -293,7 +293,7 @@ async function envSet(argv) {
     checkExtraneousFlags(argv);
 
     const config = wskd.init.newConfig(location, logger_level, env);
-
+    config.skipPhases = ['validation'];
     try {
         await wskd.init.init(config);
         await wskd.env.setEnvironment(config);
@@ -315,6 +315,7 @@ async function envList(argv) {
     checkExtraneousFlags(argv);
 
     const config = wskd.init.newConfig(null, logger_level);
+    config.skipPhases = ['validation'];
     await wskd.init.init(config);
 
     const envs: any = await wskd.env.getEnvironments(config);
@@ -356,6 +357,7 @@ async function changeVersion(argv) {
     checkExtraneousFlags(argv);
 
     const config = wskd.init.newConfig(projectPath);
+    config.skipPhases = ['validation'];
     try {
 
         await wskd.init.init(config);
