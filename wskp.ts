@@ -306,23 +306,28 @@ async function envSet(argv) {
 
 async function envList(argv) {
     if (argv.help) {
-        helpCommand('wskp env list');
+        helpCommand('wskp env list <project.yml>');
     }
+
+    const projectPath = argv._.shift();
+    if (!projectPath)
+        error('missing project configuration');
 
     checkExtraneous(argv);
     const logger_level = getLoggerLevel(argv);
     const global = getGlobalFlags(argv);
     checkExtraneousFlags(argv);
 
-    const config = wskd.init.newConfig(null, logger_level);
+    const config = wskd.init.newConfig(projectPath, logger_level);
     config.skipPhases = ['validation'];
     await wskd.init.init(config);
 
-    const envs: any = await wskd.env.getEnvironments(config);
-    console.log(chalk.bold('Name / Writable'))
-    envs.forEach(item => console.log(`${item.name} / ${item.writable ? 'true' : 'false'}`));
+    const envs = await wskd.env.getEnvironments(config);
+    const columnify = await import('columnify');
+    const formatted = envs.map(env => ({ name: env.policies.name, writable: env.policies.writable, versions: env.versions }));
+    console.log(columnify(formatted));
 }
-
+ 
 async function yo(argv) {
     const cmd = argv._.shift();
 
