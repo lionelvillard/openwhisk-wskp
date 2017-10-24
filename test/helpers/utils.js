@@ -20,7 +20,7 @@ const path = require('path')
 const wskd = require('openwhisk-deploy')
 const Configstore = require('configstore');
 
-const conf = new Configstore(pkg.name, { 'bx': true });
+const conf = new Configstore('openwhisk-wskp', { 'bx': true });
 conf.set('bx', true);
 
 const before = ctx => async () => {

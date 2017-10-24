@@ -24,7 +24,7 @@ if (!process.env.WSKP_NO_CHECK_UPDATE) {
     updateNotifier({ pkg, updateCheckInterval: 1000 * 60 * 60 * 24 }).notify();
 }
 
-const extensions = ['--help', '-V', '--version', '-h', 'deploy', 'wipe', 'undeploy', 'refresh', 'update', 'env', 'yo', 'start', 'action', 'version'];
+const extensions = ['--help', '-V', '--version', '-h', 'deploy', 'wipe', 'undeploy', 'refresh', 'update', 'env', 'yo', 'start', 'action', 'version', 'promote'];
 
 async function run() {
     try {
@@ -59,6 +59,8 @@ async function run() {
                 return start(argv);
             case 'version':
                 return changeVersion(argv);
+            case 'promote':
+                return promote(argv);
 
             default:
                 return help();
@@ -196,7 +198,7 @@ async function undeploy(argv) {
 
     try {
         const config = wskd.init.newConfig(file, logger_level, global.env);
-        
+
         await wskd.init.init(config);
         await wskd.undeploy.apply(config);
         console.log(chalk.green('ok.'));
@@ -360,15 +362,38 @@ async function changeVersion(argv) {
     const config = wskd.init.newConfig(projectPath);
     config.skipPhases = ['validation'];
     try {
-
         await wskd.init.init(config);
-        wskd.env.incVersion(config, increment);
+        await wskd.env.incVersion(config, increment);
         console.log(chalk.green('ok.'));
     } catch (e) {
         config.setProgress('');
         error(e);
     }
 
+}
+
+async function promote(argv) {
+    if (argv.help) {
+        await helpCommand('wskp promote <openwhisk.yml>');
+    }
+    const projectPath = argv._.shift();
+    if (!projectPath)
+        error('missing configuration file');
+
+    checkExtraneous(argv);
+    const logger_level = getLoggerLevel(argv);
+    const global = getGlobalFlags(argv);
+    checkExtraneousFlags(argv);
+
+    const config = wskd.init.newConfig(projectPath);
+    config.skipPhases = ['validation'];
+    await wskd.init.init(config);
+    const success  = await wskd.env.promote(config);
+    config.setProgress('');
+    if (success)
+        console.log(chalk.green('ok.'));
+    else
+        console.log(chalk.red('not ok.'));
 }
 
 
@@ -510,7 +535,7 @@ async function globalFlagsHelp() {
     console.log('Flags:');
     console.log('  -e, --env                  environment name');
     console.log(wskhelp.slice(patch));
-    
+
 }
 
 run();
