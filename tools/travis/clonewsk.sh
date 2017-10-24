@@ -7,5 +7,8 @@ if [ "$LATEST_WSKD" = true ]; then
   cd openwhisk-project
   npm i 
   npm run compilenowatch
+  cd plugins
+  ./install.sh
+  cd ..
   npm link
 fi
