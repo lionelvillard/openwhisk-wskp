@@ -29,19 +29,23 @@ const conf = new Configstore(pkg.name, { 'bx': false });
 export async function prepareWskCommand(wskcmd, argv, options = {}) {
     const bx = conf.get('bx') ? 'bx ' : '';
 
-    let envname;
-    const envIdx = argv.indexOf('-e');
-    if (envIdx > 0) {
-        if (envIdx + 1 >= argv.length)
-            throw `expecting envname after -e`;
-        envname = argv[envIdx + 1];    
+    if (wskcmd) {
+        let envname;
+        const envIdx = argv.indexOf('-e');
+        if (envIdx > 0) {
+            if (envIdx + 1 >= argv.length)
+                throw `expecting envname after -e`;
+            envname = argv[envIdx + 1];
+        }
+        const config: any = { envname };
+        await wskd.init.init(config);
+        const wskPropsFile = await wskd.env.getWskPropsFile(config);
+        let wskConfigFile = wskPropsFile ? `WSK_CONFIG_FILE=${wskPropsFile}` : '';
+        const args = argv.map(item => `'${item.replace(/'/, `\\'`)}'`).join(' ')
+        config.setProgress('');
+        return `${wskConfigFile} ${bx} wsk ${wskcmd} ${args}`;
     }
-    const config = {envname};
-    await wskd.init.init(config);
-    const wskPropsFile = await wskd.env.getWskPropsFile(config);
-    let wskConfigFile = wskPropsFile ? `WSK_CONFIG_FILE=${wskPropsFile}` : '';
-    const args = argv.map(item => `'${item.replace(/'/, `\\'`)}'`).join(' ')
-    return `${wskConfigFile} ${bx} wsk ${wskcmd} ${args}`
+    return `${bx} wsk ${argv}`;
 }
 
 export async function spawnWskAndExit(wskcmd, argv, options = {}) {
@@ -52,7 +56,7 @@ export async function spawnWskAndExit(wskcmd, argv, options = {}) {
     }
 
     const fullCmd = await prepareWskCommand(wskcmd, argv, options)
-
+    
     if (process.env.WSKP_DEBUG)
         console.error(`spawn ${fullCmd}`)
 
@@ -68,23 +72,23 @@ export async function spawnWskAndExit(wskcmd, argv, options = {}) {
     })
 }
 
-export function execWsk(wskcmd, argv, options = {}): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const fullCmd = prepareWskCommand(wskcmd, argv, options)
+export async function execWsk(wskcmd, argv, options = {}) : Promise<string> {
+    const fullCmd = await prepareWskCommand(wskcmd, argv, options)
 
-        if (process.env.WSKP_DEBUG)
-            console.error(`exec ${fullCmd}`)
+    if (process.env.WSKP_DEBUG)
+        console.error(`exec ${fullCmd}`)
 
+    return new Promise<string>((resolve, reject) => {
         exec(fullCmd, (error, stdout, stderr) => {
             if (error) {
-                console.log(stdout)
-                console.error(stderr)
-                reject(error)
+                console.log(stdout);
+                console.error(stderr);
+                reject(error);
             } else {
-                resolve(stdout)
+                resolve(stdout);
             }
-        })
-    })
+        });
+    });
 }
 
 // transform options of the form --flag K V to --flag K=V 

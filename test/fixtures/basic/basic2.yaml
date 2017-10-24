@@ -1,0 +1,8 @@
+packages:
+  inline-code:
+    actions:
+      echo:
+        kind: nodejs
+        code: |
+          console.log(params2)
+          return params2 || {}

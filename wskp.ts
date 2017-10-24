@@ -148,7 +148,7 @@ async function actionInvoke(argv) {
 
 async function deploy(argv) {
     if (argv.help) {
-        helpCommand('wskp deploy <project.yml>', ['-m, --mode [mode]     deployment mode (create|update) [create]',
+        await helpCommand('wskp deploy <project.yml>', ['-m, --mode [mode]     deployment mode (create|update) [create]',
             '-e, --env  [envname]  targeted environment name. Default to <current>']);
     }
     const file = argv._.shift();
@@ -183,7 +183,7 @@ async function deploy(argv) {
 
 async function undeploy(argv) {
     if (argv.help) {
-        helpCommand('wskp undeploy <config.yml>');
+        await helpCommand('wskp undeploy <config.yml>');
     }
     const file = argv._.shift();
     if (!file) {
@@ -195,14 +195,9 @@ async function undeploy(argv) {
     checkExtraneousFlags(argv);
 
     try {
-        const config: wskd.types.Config = {
-            basePath: '.',
-            cache: '.openwhisk',
-            location: file,
-            logger_level
-        }
-
-        await wskd.env.initWsk(config, global);
+        const config = wskd.init.newConfig(file, logger_level, global.env);
+        
+        await wskd.init.init(config);
         await wskd.undeploy.apply(config);
         console.log(chalk.green('ok.'));
     } catch (e) {
@@ -212,7 +207,7 @@ async function undeploy(argv) {
 
 async function wipe(argv) {
     if (argv.help) {
-        helpCommand('wskp wipe', ['-f, --force']);
+        await helpCommand('wskp wipe', ['-f, --force']);
     }
     checkExtraneous(argv);
     const logger_level = getLoggerLevel(argv);
@@ -235,7 +230,7 @@ async function wipe(argv) {
 
 async function refresh(argv) {
     if (argv.help) {
-        helpCommand('wskp refresh', ['-f <format>, --format <format>]', 'output format (bash|yaml) [yaml]']);
+        await helpCommand('wskp refresh', ['-f <format>, --format <format>]', 'output format (bash|yaml) [yaml]']);
     }
     checkExtraneous(argv);
     const logger_level = getLoggerLevel(argv);
@@ -279,7 +274,7 @@ async function env(argv) {
 
 async function envSet(argv) {
     if (argv.help) {
-        helpCommand('wskp env set env [project.yml]');
+        await helpCommand('wskp env set env [project.yml]');
     }
     const env = argv._.shift();
     if (!env)
@@ -306,7 +301,7 @@ async function envSet(argv) {
 
 async function envList(argv) {
     if (argv.help) {
-        helpCommand('wskp env list <project.yml>');
+        await helpCommand('wskp env list <project.yml>');
     }
 
     const projectPath = argv._.shift();
@@ -319,15 +314,17 @@ async function envList(argv) {
     checkExtraneousFlags(argv);
 
     const config = wskd.init.newConfig(projectPath, logger_level);
+    config.envname = 'dev';
     config.skipPhases = ['validation'];
     await wskd.init.init(config);
 
     const envs = await wskd.env.getEnvironments(config);
     const columnify = await import('columnify');
     const formatted = envs.map(env => ({ name: env.policies.name, writable: env.policies.writable, versions: env.versions }));
+    config.setProgress('');
     console.log(columnify(formatted));
 }
- 
+
 async function yo(argv) {
     const cmd = argv._.shift();
 
@@ -346,7 +343,7 @@ async function yo(argv) {
 
 async function changeVersion(argv) {
     if (argv.help) {
-        helpCommand('wskp version <project.yml> (major | premajor | minor | preminor | patch | prepatch | prerelease)');
+        await helpCommand('wskp version <project.yml> (major | premajor | minor | preminor | patch | prepatch | prerelease)');
     }
     const projectPath = argv._.shift();
     if (!projectPath)
@@ -378,7 +375,7 @@ async function changeVersion(argv) {
 
 async function start(argv) {
     if (argv.help) {
-        helpCommand('wskp start');
+        await helpCommand('wskp start');
     }
     checkExtraneous(argv);
     const logger_level = getLoggerLevel(argv);
@@ -509,9 +506,12 @@ async function helpCommand(command: string, flags?: string[]) {
 async function globalFlagsHelp() {
     let wskhelp = await utils.execWsk('', ['--help']);
     wskhelp = wskhelp.replace('wsk', 'wskp');
-    const patch = wskhelp.indexOf('Flags') - 2;
+    const patch = wskhelp.indexOf('Flags') + 7;
+
+    console.log('Flags:');
+    console.log('  -e, --env                  environment name');
     console.log(wskhelp.slice(patch));
-    console.log(' -e, --env                  environment name');
+    
 }
 
 run();

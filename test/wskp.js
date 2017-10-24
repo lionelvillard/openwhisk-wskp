@@ -32,21 +32,22 @@ describe('testing environment', function () {
     });
 
     it('env list', async () => {
-        const output = await exec(`${wskp} env list`, { cwd });
-        assert.strictEqual(output.stdout, 'test\n\n');
+        const output = await exec(`${wskp} env list openwhisk.yml`, { cwd });
+        assert.ok(output.stdout.includes('dev'));
     });
 
     it('env set test', async () => {
-        const output = await exec(`${wskp} env set test`, { cwd });
-        assert.strictEqual(output.stdout, '');
+        const output = await exec(`${wskp} env set test openwhisk.yml`, { cwd });
+        assert.strictEqual(output.stdout, 'ok.\n');
     });
 
     it('env set invalid environment name', async () => {
         try {
-            const output = await exec(`${wskp} env set invalidenv`, { cwd });
+            const output = await exec(`${wskp} env set invalidenv openwhisk.yml`, { cwd });
+            console.log(output)
             assert.ok(false);
         } catch (e) {
-            assert.strictEqual(e.stderr, 'invalidenv does not exist\n');
+            assert.strictEqual(e.stderr, 'error: environment invalidenv does not exist\n');
         }
     });
 });
@@ -56,32 +57,41 @@ describe('testing deploy', function () {
     before(utils.before(ctx));
     after(utils.after(ctx));
 
-    const wskp = './dist/wskp.js'
+    const wskp = '../../../dist/wskp.js';
+    const cwd = 'test/fixtures/basic/';
 
     it('with no args', async () => {
         try {
-            const output = await exec(`${wskp} deploy`)
+            const output = await exec(`${wskp} deploy`, { cwd })
             assert.ok(false);
         } catch (e) {
-            assert.strictEqual(e.stderr, 'Error: missing configuration file\n');
+            assert.strictEqual(e.stderr, 'error: missing configuration file\n');
         }
     });
 
     it('basic - mode create', async () => {
-        const output = await exec(`${wskp} deploy test/fixtures/basic/basic.yaml`)
-        const echo = await ctx.ow.actions.get({ name: 'inline-code/echo' });
-        assert.strictEqual(echo.name, 'echo');
+        await exec(`${wskp} env set dev basic.yaml`, { cwd });
+        await exec(`${wskp} wipe -f`, { cwd });
+        
+        const output = await exec(`${wskp} deploy basic.yaml`, { cwd });
+        const echo = await exec(`${wskp} action get inline-code/echo`, {cwd});
+        assert.ok(echo);
+        assert.ok(echo.stdout);
+        assert.ok(echo.stdout.includes('inline-code/echo'));
+        assert.ok(echo.stdout.includes('params'));
     });
 
     it('basic - mode update', async () => {
-        const output = await exec(`${wskp} deploy test/fixtures/basic/basic.yaml -m update`)
-        const echo = await ctx.ow.actions.get({ name: 'inline-code/echo' });
-        assert.strictEqual(echo.name, 'echo');
+        const output = await exec(`${wskp} deploy basic2.yaml -m update`, { cwd });
+        const echo = await exec(`${wskp} action get inline-code/echo`, {cwd});
+        assert.ok(echo);
+        assert.ok(echo.stdout);
+        assert.ok(echo.stdout.includes('params2'));
     });
 
     it('basic - mode create - error', async () => {
         try {
-            const output = await exec(`${wskp} deploy test/fixtures/basic/basic.yaml`);
+            const output = await exec(`${wskp} deploy basic.yaml`, { cwd });
             assert.ok(false);
         } catch (e) {
             assert.ok(true);
@@ -95,27 +105,33 @@ describe('testing undeploy', function () {
     before(utils.before(ctx));
     after(utils.after(ctx));
 
-    const wskp = './dist/wskp.js'
+    const wskp = '../../../dist/wskp.js';
+    const cwd = 'test/fixtures/basic/';
 
     it('with no args', async () => {
         try {
-            const output = await exec(`${wskp} undeploy`);
+            const output = await exec(`${wskp} undeploy`, { cwd});
             assert.ok(false);
         } catch (e) {
-            assert.strictEqual(e.stderr, 'Error: missing configuration file\n');
+            assert.strictEqual(e.stderr, 'error: missing configuration file\n');
         }
     });
 
     it('basic - unmanaged', async () => {
-        const output = await exec(`${wskp} deploy test/fixtures/basic/basic.yaml`);
-        const echo = await ctx.ow.actions.get({ name: 'inline-code/echo' });
-        assert.strictEqual(echo.name, 'echo');
-        const output2 = await exec(`${wskp} undeploy test/fixtures/basic/basic.yaml`);
+        await exec(`${wskp} env set dev basic.yaml`, { cwd });
+        await exec(`${wskp} wipe -f`, { cwd });
+        
+        const output = await exec(`${wskp} deploy basic.yaml`, { cwd });
+        const echo = await exec(`${wskp} action get inline-code/echo`, {cwd});
+        assert.ok(echo);
+        assert.ok(echo.stdout);
+        assert.ok(echo.stdout.includes('inline-code/echo'));
+        const output2 = await exec(`${wskp} undeploy basic.yaml`, { cwd });
         try {
-            const echo2 = await ctx.ow.actions.get({ name: 'inline-code/echo' });
+            const echo2 = await exec(`${wskp} action get inline-code/echo`, {cwd});
             assert.ok(false);
         } catch (e) {
-            assert.strictEqual(e.statusCode, 404)
+            assert.ok(e.stderr.includes('requested resource does not exist'));
         }
 
     });

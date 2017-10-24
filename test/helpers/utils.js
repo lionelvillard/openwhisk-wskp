@@ -22,8 +22,6 @@ const wskd = require('openwhisk-deploy')
 const before = ctx => async () => {
     fs.mkdirsSync('.tests');
     ctx.cacheDir = await fs.mkdtemp('.tests/test');
-    ctx.ow = wskd.auth.initWsk();
-    await wskd.undeploy.all(ctx.ow);
 }
 exports.before = before;
 
@@ -33,3 +31,7 @@ const after = ctx => () => {
     }
 }
 exports.after = after;
+
+
+const delay = ms => new Promise(resolve => setTimeout(() => resolve(), ms));
+exports.delay = delay;

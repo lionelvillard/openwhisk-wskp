@@ -5,10 +5,10 @@
         "echo": {
           "kind": "nodejs:6",
           "code": "console.log(params)\nreturn params || {}\n",
-          "_qname": "/_/inline-code/echo"
+          "_qname": "/villard@us.ibm.com_dev/inline-code/echo"
         }
       }
     }
   },
-  "namespace": "_"
+  "namespace": "villard@us.ibm.com_dev"
 }
