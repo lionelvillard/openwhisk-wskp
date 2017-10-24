@@ -217,9 +217,8 @@ async function wipe(argv) {
 
     if (force || readline.keyInYN(`${chalk.red('DANGER ZONE')}: are you sure you want to delete ${chalk.bold('all')} deployed OpenWhisk entities?`)) {
         try {
-            const config: wskd.types.Config = { logger_level };
-            await wskd.env.initWsk(config, global);
-
+            const config = wskd.init.newConfig(null, logger_level, global.env);
+            await wskd.init.init(config);
             await wskd.undeploy.apply(config);
             console.log(chalk.green('ok.'));
         } catch (e) {
