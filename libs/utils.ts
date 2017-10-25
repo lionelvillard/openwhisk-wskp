@@ -18,32 +18,44 @@ const path = require('path')
 const expandHomeDir = require('expand-home-dir')
 const { spawn, exec } = require('child_process')
 const openwhisk = require('openwhisk')
-const wskd = require('openwhisk-deploy')
 const pkg = require('../../package.json');
 const Configstore = require('configstore');
 
 import * as chalk from 'chalk';
+import * as wskd from 'openwhisk-deploy';
+import * as parser from 'properties-parser';
 
 const conf = new Configstore(pkg.name, { 'bx': false });
 
-export async function prepareWskCommand(wskcmd, argv, options = {}) {
-    const bx = conf.get('bx') ? 'bx ' : '';
 
-    if (wskcmd) {
-        let envname;
-        const envIdx = argv.indexOf('-e');
-        if (envIdx > 0) {
-            if (envIdx + 1 >= argv.length)
-                throw `expecting envname after -e`;
-            envname = argv[envIdx + 1];
+export async function prepareWskCommand(wskcmd, argv, options = {}) {
+    let bx = conf.get('bx') ? 'bx ' : '';
+    
+    if (wskcmd) {        
+        const envname = extractEnv(argv);
+        bx = envname ? bx : '';
+        const config = wskd.init.newConfig(envname ? 'app.yml': '', '', envname);
+        config.skipPhases = ['validation'];
+        try {
+            await wskd.init.init(config);
+            const wskPropsFile = await wskd.env.getWskPropsFile(config);
+            let wskConfigFile = wskPropsFile ? `WSK_CONFIG_FILE=${wskPropsFile}` : '';
+            
+            if (envname && wskPropsFile) {
+                const props = parser.read(wskPropsFile);
+                if (props.BLUEMIX_ORG && props.BLUEMIX_SPACE) {
+                    wskConfigFile += ` BLUEMIX_HOME=${path.join(config.cache, '.bluemix', 'api.ng.bluemix.net', props.BLUEMIX_ORG, props.BLUEMIX_SPACE)}`;
+                }
+            }
+
+            const args = argv.map(item => `'${item.replace(/'/, `\\'`)}'`).join(' ');            
+            config.clearProgress();
+            return `${wskConfigFile} ${bx} wsk ${wskcmd} ${args}`;
+        } catch (e) {
+            config.clearProgress();
+            console.error(e);
+            process.exit(1);
         }
-        const config: any = { envname };
-        await wskd.init.init(config);
-        const wskPropsFile = await wskd.env.getWskPropsFile(config);
-        let wskConfigFile = wskPropsFile ? `WSK_CONFIG_FILE=${wskPropsFile}` : '';
-        const args = argv.map(item => `'${item.replace(/'/, `\\'`)}'`).join(' ')
-        config.setProgress('');
-        return `${wskConfigFile} ${bx} wsk ${wskcmd} ${args}`;
     }
     return `${bx} wsk ${argv}`;
 }
@@ -56,7 +68,7 @@ export async function spawnWskAndExit(wskcmd, argv, options = {}) {
     }
 
     const fullCmd = await prepareWskCommand(wskcmd, argv, options)
-    
+
     if (process.env.WSKP_DEBUG)
         console.error(`spawn ${fullCmd}`)
 
@@ -72,7 +84,7 @@ export async function spawnWskAndExit(wskcmd, argv, options = {}) {
     })
 }
 
-export async function execWsk(wskcmd, argv, options = {}) : Promise<string> {
+export async function execWsk(wskcmd, argv, options = {}): Promise<string> {
     const fullCmd = await prepareWskCommand(wskcmd, argv, options)
 
     if (process.env.WSKP_DEBUG)
@@ -131,4 +143,18 @@ export function addOptions(command, options) {
             command = command.option(option.flags, option.desc)
     }
     return command;
+}
+
+function extractEnv(argv) {
+    let envname;
+    const envIdx = argv.indexOf('-e');
+    if (envIdx >= 0) {
+        if (envIdx + 1 >= argv.length)
+            throw `expecting envname after -e`;
+        envname = argv[envIdx + 1];
+        
+        delete argv[envIdx];
+        delete argv[envIdx + 1];
+    }
+    return envname;
 }

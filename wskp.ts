@@ -27,47 +27,42 @@ if (!process.env.WSKP_NO_CHECK_UPDATE) {
 const extensions = ['--help', '-V', '--version', '-h', 'deploy', 'wipe', 'undeploy', 'refresh', 'update', 'env', 'yo', 'start', 'action', 'version', 'promote'];
 
 async function run() {
-    try {
-        const argv = minimist(utils.fixupKeyValue(process.argv.slice(2)));
+    const argv = minimist(utils.fixupKeyValue(process.argv.slice(2)));
 
-        if (argv.help && argv._.length === 0) {
-            await help();
-        }
+    if (argv.help && argv._.length === 0) {
+        await help();
+    }
 
-        if (process.argv.length > 2 && !extensions.includes(process.argv[2])) {
-            return await utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
-        }
+    if (process.argv.length > 2 && !extensions.includes(process.argv[2])) {
+        return await utils.spawnWskAndExit(process.argv[2], process.argv.slice(3));
+    }
 
-        const cmd = argv._.shift();
+    const cmd = argv._.shift();
 
-        switch (cmd) {
-            case 'action':
-                return action(argv);
-            case 'deploy':
-                return deploy(argv);
-            case 'undeploy':
-                return undeploy(argv);
-            case 'wipe':
-                return wipe(argv);
-            case 'refresh':
-                return refresh(argv);
-            case 'env':
-                return env(argv);
-            case 'yo':
-                return yo(argv);
-            case 'start':
-                return start(argv);
-            case 'version':
-                return changeVersion(argv);
-            case 'promote':
-                return promote(argv);
+    switch (cmd) {
+        case 'action':
+            return action(argv);
+        case 'deploy':
+            return deploy(argv);
+        case 'undeploy':
+            return undeploy(argv);
+        case 'wipe':
+            return wipe(argv);
+        case 'refresh':
+            return refresh(argv);
+        case 'env':
+            return env(argv);
+        case 'yo':
+            return yo(argv);
+        case 'start':
+            return start(argv);
+        case 'version':
+            return changeVersion(argv);
+        case 'promote':
+            return promote(argv);
 
-            default:
-                return help();
-        }
-    } catch (e) {
-        console.error(e);
-        process.exit(1);
+        default:
+            return help();
     }
 }
 
@@ -150,14 +145,11 @@ async function actionInvoke(argv) {
 
 async function deploy(argv) {
     if (argv.help) {
-        await helpCommand('wskp deploy <project.yml>', ['-m, --mode [mode]     deployment mode (create|update) [create]',
+        await helpCommand('wskp deploy [app.yml]', ['-m, --mode [mode]     deployment mode (create|update) [create]',
             '-e, --env  [envname]  targeted environment name. Default to <current>']);
     }
-    const file = argv._.shift();
+    const file = argv._.shift() || 'app.yml';
 
-    if (!file) {
-        error('missing configuration file');
-    }
     checkExtraneous(argv);
 
     if (! await fs.pathExists(file)) {
@@ -170,27 +162,27 @@ async function deploy(argv) {
     const mode = consume(argv, ['m', 'mode']) || 'create';
     checkExtraneousFlags(argv);
 
-    try {
-        const config = wskd.init.newConfig(file, logger_level, global.env);
-        config.force = mode === 'update';
-        config.flags = global;
+    const config = wskd.init.newConfig(file, logger_level, global.env);
+    config.force = mode === 'update';
+    config.flags = global;
 
+    try {
         await wskd.init.init(config);
         await wskd.deploy.apply(config);
+        config.setProgress('');
         console.log(chalk.green('ok.'));
     } catch (e) {
+        config.setProgress('');
         console.log(chalk.red(`not ok: ${e}`));
     }
 }
 
 async function undeploy(argv) {
     if (argv.help) {
-        await helpCommand('wskp undeploy <config.yml>');
+        await helpCommand('wskp undeploy [app.yml]');
     }
-    const file = argv._.shift();
-    if (!file) {
-        error('missing configuration file');
-    }
+    const file = argv._.shift() || 'app.yml';
+
     checkExtraneous(argv);
     const logger_level = getLoggerLevel(argv);
     const global = getGlobalFlags(argv);
@@ -268,6 +260,9 @@ async function env(argv) {
         case 'list':
             await envList(argv);
             break;
+        case 'show':
+            await envShow(argv);
+            break;
         default:
             await help();
     }
@@ -275,13 +270,13 @@ async function env(argv) {
 
 async function envSet(argv) {
     if (argv.help) {
-        await helpCommand('wskp env set env [project.yml]');
+        await helpCommand('wskp env set env [app.yml]');
     }
     const env = argv._.shift();
     if (!env)
         error('missing environment');
 
-    const location = argv._.shift(); // might be null
+    const location = argv._.shift() || 'app.yml';
 
     checkExtraneous(argv);
     const logger_level = getLoggerLevel(argv);
@@ -293,6 +288,7 @@ async function envSet(argv) {
     try {
         await wskd.init.init(config);
         await wskd.env.setEnvironment(config);
+        config.setProgress('');
         console.log(chalk.green('ok.'));
     } catch (e) {
         config.setProgress('');
@@ -302,12 +298,10 @@ async function envSet(argv) {
 
 async function envList(argv) {
     if (argv.help) {
-        await helpCommand('wskp env list <project.yml>');
+        await helpCommand('wskp env list <app.yml>');
     }
 
-    const projectPath = argv._.shift();
-    if (!projectPath)
-        error('missing project configuration');
+    const projectPath = argv._.shift() || 'app.yml';
 
     checkExtraneous(argv);
     const logger_level = getLoggerLevel(argv);
@@ -315,7 +309,6 @@ async function envList(argv) {
     checkExtraneousFlags(argv);
 
     const config = wskd.init.newConfig(projectPath, logger_level);
-    config.envname = 'dev';
     config.skipPhases = ['validation'];
     await wskd.init.init(config);
 
@@ -324,6 +317,27 @@ async function envList(argv) {
     const formatted = envs.map(env => ({ name: env.policies.name, writable: env.policies.writable, versions: env.versions }));
     config.setProgress('');
     console.log(columnify(formatted));
+}
+
+
+async function envShow(argv) {
+    if (argv.help) {
+        await helpCommand('wskp env show');
+    }
+
+    checkExtraneous(argv);
+    const logger_level = getLoggerLevel(argv);
+    const global = getGlobalFlags(argv);
+    checkExtraneousFlags(argv);
+
+    const config = wskd.init.newConfig('app.yml', logger_level);
+    config.skipPhases = ['validation'];
+    await wskd.init.init(config);
+    const props = await wskd.env.getCurrent(config);
+    config.clearProgress();
+    const env = props.ENVNAME;
+    const version = props.VERSION;
+    console.log(env ? `${env}${version? `@${version}`: ''}`: 'no current environment');
 }
 
 async function yo(argv) {
@@ -341,18 +355,15 @@ async function yo(argv) {
     }
 }
 
-
 async function changeVersion(argv) {
     if (argv.help) {
-        await helpCommand('wskp version <project.yml> (major | premajor | minor | preminor | patch | prepatch | prerelease)');
+        await helpCommand('wskp version (major|premajor|minor|preminor|patch|prepatch|prerelease) [app.yml]');
     }
-    const projectPath = argv._.shift();
-    if (!projectPath)
-        error('missing configuration file');
-
     const increment = argv._.shift();
     if (!increment)
         error('missing release type');
+
+    const projectPath = argv._.shift() || 'app.yml';
 
     checkExtraneous(argv);
     const logger_level = getLoggerLevel(argv);
@@ -364,6 +375,8 @@ async function changeVersion(argv) {
     try {
         await wskd.init.init(config);
         await wskd.env.incVersion(config, increment);
+        config.setProgress('');
+
         console.log(chalk.green('ok.'));
     } catch (e) {
         config.setProgress('');
@@ -374,11 +387,9 @@ async function changeVersion(argv) {
 
 async function promote(argv) {
     if (argv.help) {
-        await helpCommand('wskp promote <openwhisk.yml>');
+        await helpCommand('wskp promote [app.ym]');
     }
-    const projectPath = argv._.shift();
-    if (!projectPath)
-        error('missing configuration file');
+    const projectPath = argv._.shift() || 'app.yml';
 
     checkExtraneous(argv);
     const logger_level = getLoggerLevel(argv);
@@ -388,7 +399,7 @@ async function promote(argv) {
     const config = wskd.init.newConfig(projectPath);
     config.skipPhases = ['validation'];
     await wskd.init.init(config);
-    const success  = await wskd.env.promote(config);
+    const success = await wskd.env.promote(config);
     config.setProgress('');
     if (success)
         console.log(chalk.green('ok.'));
