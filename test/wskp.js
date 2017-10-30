@@ -33,6 +33,7 @@ describe('testing environment', function () {
 
     it('env list', async () => {
         const output = await exec(`${wskp} env list openwhisk.yml`, { cwd });
+        console.log(output)
         assert.ok(output.stdout.includes('dev'));
     });
 
@@ -116,7 +117,7 @@ describe('testing undeploy', function () {
         }
     });
 
-    it('basic - unmanaged', async () => {
+    it('basic - managed', async () => {
         await exec(`${wskp} env set dev basic.yaml`, { cwd });
         await exec(`${wskp} wipe -f`, { cwd });
 
