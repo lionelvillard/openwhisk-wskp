@@ -33,7 +33,6 @@ describe('testing environment', function () {
 
     it('env list', async () => {
         const output = await exec(`${wskp} env list openwhisk.yml`, { cwd });
-        console.log(output)
         assert.ok(output.stdout.includes('dev'));
     });
 
@@ -59,7 +58,7 @@ describe('testing deploy', function () {
 
     const wskp = '../../../dist/wskp.js';
     const cwd = 'test/fixtures/basic/';
-
+    
     it('with no args', async () => {
         try {
             const output = await exec(`${wskp} deploy`, { cwd })
@@ -69,7 +68,7 @@ describe('testing deploy', function () {
         }
     });
 
-    it('basic - mode create', async () => {
+    it.skip('basic - mode create', async () => {
         await exec(`${wskp} env set dev basic.yaml`, { cwd });
         await exec(`${wskp} wipe -f`, { cwd });
 
@@ -81,7 +80,7 @@ describe('testing deploy', function () {
         assert.ok(echo.stdout.includes('params'));
     });
 
-    it('basic - mode update', async () => {
+    it.skip('basic - mode update', async () => {
         const output = await exec(`${wskp} deploy basic2.yaml -m update`, { cwd });
         const echo = await exec(`${wskp} action get inline-code/echo`, { cwd });
         assert.ok(echo);
